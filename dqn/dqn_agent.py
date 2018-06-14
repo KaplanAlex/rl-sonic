@@ -77,8 +77,18 @@ class DQN_Agent:
             # Act greedily (select action with highest reward)
             q = self.model.predict(input_state)
             action_idx = np.argmax(q)
+            
         return action_idx
     
+
+    def update_target_model(self):
+        """
+        After some time interval update the target model to be same with model
+        """
+        self.target_model.set_weights(self.model.get_weights())
+
+
+
     def load_model(self, name):
         """
         Load a saved model
