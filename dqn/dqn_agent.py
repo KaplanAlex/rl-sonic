@@ -10,6 +10,7 @@ these actions to expedite training
 """
 
 from collections import deque
+from keras import load_model, save_model
 import numpy as np
 import random
 
@@ -51,7 +52,7 @@ class DQN_Agent:
         self.memory = deque(maxlen=50000)
         
         # The main and target models used to predict q-values
-        self.model = main_model
+        self.main_model = main_model
         self.target_model = target_model
 
         # A dictionary mapping action indicies to executable actions 
@@ -82,13 +83,33 @@ class DQN_Agent:
         else:
             # Predict the value associated with each action given the 
             # input state. Greedily choose the best action.
-            action_values = self.model.predict(input_state)
+            action_values = self.main_model.predict(input_state)
             action_idx = np.argmax(q)
             
         new_action = self.action_switch[action_idx]
 
         return action_idx, new_action
     
+    def save_memory(self, state, act_idx, reward, next_state, done):
+        """
+        Save an experience <state, action, reward, next_state, done> tuple
+        to memory to be used in training. Memories are saved to separate
+        the exploration/ information gathering process from learning.
+        """
+        self.memory.append((state, act_idx, reward, next_state, done))
+
+
+    def update_target_model(self):
+        """
+        Update the target model with the weights of updated model
+        "main_model". 
+        
+        The target model is used to produce consistent value approximations 
+        during the training process, as DQNs are trained relative to their 
+        own predictions which can easily lead to divergence.
+        """
+        self.target_model.set_weights(self.main_model.get_weights())
+
 
     def initialize_action_switch(self, act_idx):
         """
@@ -127,23 +148,24 @@ class DQN_Agent:
 
         return action_switch
 
-    def update_target_model(self):
+    def load_models(self):
         """
-        After some time interval update the target model to be same with model
-        """
-        self.target_model.set_weights(self.model.get_weights())
+        Set the working models to models saved in the following
+        locations:
+        main_model    <-  "dqn_main.h5"
+        target_model  <-  "dqn_target.h5"
 
-
-
-    def load_model(self, name):
         """
-        Load a saved model
-        """
-        self.model.load_weights(name)
+        self.main_model = load_model("dqn_main.h5")
+        self.target_model = load_model("dqn_target.h5")
 
-    def save_model(self, name):
+    def save_models(self, name):
         """
-        Save a model. 
+        Save the current models to the following locations:
+        main_model    ->  "dqn_main.h5"
+        target_model  ->  "dqn_target.h5"
+        
         Useful for pausing and restarting training.
         """
-        self.model.save_weights(name)
+        self.main_model = save_model("dqn_main.h5")
+        self.target_model = save_model("dqn_target.h5")
