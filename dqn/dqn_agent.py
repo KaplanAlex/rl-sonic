@@ -54,6 +54,9 @@ class DQN_Agent:
         self.model = main_model
         self.target_model = target_model
 
+        # A dictionary mapping action indicies to executable actions 
+        # (button combinations).
+        self.action_switch = self.initialize_action_switch()
     
     
     def act(self, input_state):
@@ -66,20 +69,63 @@ class DQN_Agent:
             input_state:
                 Information about the world used to predict the 
                 optimal aciton.
-        return:
-            The optimal action action as determined by the current
-            model.
+        Return:
+            act_idx: The index of the optimal action action as 
+            determined by the current model.
+
+            new_action: The executable action (button combination)
+            represented by act_idx.
         """
 
         if np.random.rand() <= self.epsilon:
             action_idx = random.randrange(self.action_size)
         else:
-            # Act greedily (select action with highest reward)
-            q = self.model.predict(input_state)
+            # Predict the value associated with each action given the 
+            # input state. Greedily choose the best action.
+            action_values = self.model.predict(input_state)
             action_idx = np.argmax(q)
             
-        return action_idx
+        new_action = self.action_switch[action_idx]
+
+        return action_idx, new_action
     
+
+    def initialize_action_switch(self, act_idx):
+        """
+        Initialize a mapping from the index of an action 
+        selection to an action executable within the environment. 
+        There are only 8 button combinations relevant to the Sonic 
+        game, each which can be encoded as an array of 12 booleans
+        representing button presses.
+
+        args:
+            act_idx: The index of the action selected by the model.
+        returns:
+            action_switch: A mapping from the index of an action to
+            an array encoding the button presses to execute the action.
+        """
+        # Map indicies to arrays with 12 values encoding button presses
+        # (B, A, MODE, START, UP, DOWN, LEFT, RIGHT, C, Y, X, Z)
+        self.action_switch = {
+            # No Operation
+            0: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            # Left
+            1: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]
+            # Right
+            2: [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]
+            # Left, Down
+            3: [0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0]
+            # Right, Down
+            4: [0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0]
+            # Down
+            5: [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+            # Down, B
+            6: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+            # B
+            7: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        }
+
+        return action_switch
 
     def update_target_model(self):
         """
@@ -96,7 +142,6 @@ class DQN_Agent:
         self.model.load_weights(name)
 
     def save_model(self, name):
-
         """
         Save a model. 
         Useful for pausing and restarting training.
