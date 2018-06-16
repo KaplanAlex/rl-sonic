@@ -1,12 +1,12 @@
 """
 Basic DQN Implementation.
 
-DQNs approximate the q function which maps state, action pairs to 
-values. 
+DQNs approximate the q function which maps (state, action) pairs 
+to values. 
 
 Only 8 of the valid 2^12 Sega Genesis button combinations
 are relevant to Sonic, thus the action space is restriticted to
-these actions to expedite training
+these 8 actions to expedite training and exploration.
 """
 
 from collections import deque
@@ -17,33 +17,28 @@ import random
 
 class DQN_Agent:
     
-    def __init__(self, input_size, action_size, main_model, target_model):
+    def __init__(self, input_size, action_size):
         """
         args:
             input_size: 
-                The dimensionality of input observations.
+                The dimension of input observations.
             action_size:
-                The dimensionality of the available actions.
-            main_model:
-                Model used to predict q values associated with 
-                state aciton pairs.
-            target_model:
-                Second model with the same capabilities as the
-                main model with fixed weights - improves convergence
+                The dimension of the available actions.           
         """
         # Model structure parameters
         self.input_size = input_size
         self.action_size = action_size
 
-        # Learning parameters
+        # Learning Parameters
         self.gamma = 0.99
-        self.learning_rate = 0.0001
+        self.main_lr = 0.0001
+        self.target_lr = 0.0001
+        
+        # Exploration rate.
         self.epsilon = 1.0
         self.initial_epsilon = 1.0
         self.final_epsilon = 0.0001
-        self.batch_size = 32
-        self.observe = 5000
-        self.explore = 50000 
+        
         self.frame_per_action = 4
         self.update_target_freq = 3000 
         self.timestep_per_train = 100 # Number of timesteps between training interval
@@ -51,9 +46,12 @@ class DQN_Agent:
         # Memory for experience replay
         self.memory = deque(maxlen=50000)
         
-        # The main and target models used to predict q-values
-        self.main_model = main_model
-        self.target_model = target_model
+        # Main model used to predict q-values.
+        self.main_model = None 
+
+        #Second model with the same capabilities as the main model 
+        # with fixed weights - improves convergence.
+        self.target_model = None
 
         # A dictionary mapping action indicies to executable actions 
         # (button combinations).
@@ -154,8 +152,8 @@ class DQN_Agent:
         locations:
         main_model    <-  "dqn_main.h5"
         target_model  <-  "dqn_target.h5"
-
         """
+
         self.main_model = load_model("dqn_main.h5")
         self.target_model = load_model("dqn_target.h5")
 
