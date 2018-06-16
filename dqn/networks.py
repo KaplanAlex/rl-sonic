@@ -1,80 +1,39 @@
-import tensorflow as tf
 
-import json
-from keras.models import model_from_json
-from keras.models import Sequential, load_model, Model
-from keras.layers.core import Dense, Dropout, Activation, Flatten
-from keras.layers.wrappers import TimeDistributed
-from keras.layers import Convolution2D, Dense, Flatten, merge, MaxPooling2D, Input, AveragePooling2D, Lambda, Merge, Activation, Embedding
-from keras.optimizers import SGD, Adam, rmsprop
-from keras.layers.recurrent import LSTM, GRU
-from keras.layers.normalization import BatchNormalization
-from keras import backend as K
+
+from keras.models import Sequential, Model
+from keras.layers import Conv2D, Dense, Flatten, MaxPooling2D
+from keras.optimizers import Adam
+
 
 class Networks(object):
 
     @staticmethod    
     def dqn(input_shape, action_size, learning_rate):
+        """
+        A convolutional neural network to approximate the q function relating
+        (state, action) pairs to 
+
+        Arguments:
+            input_shape: 
+        """
         model = Sequential()
-        model.add(Convolution2D(32, 8, 8, subsample=(4,4), activation='relu', input_shape=(input_shape)))
-        model.add(Convolution2D(64, 4, 4, subsample=(2,2), activation='relu'))
-        model.add(Convolution2D(64, 3, 3, activation='relu'))
+        # Start with a convolutional layer with defined input shape...
+        # 32 output Filters each with a window of 6x6 with stride 1. 
+        # (4D output - stack of 2d convolution results for each filter for each input sample in the batch)
+        model.add(Conv2D(32, kernel_size=(6, 6), strides=(1, 1), activation='relu', input_shape=input_shape))
+        # Pool to extract features and reduce dimensionality
+        model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+        # Second convolutional layer with 64 filters followed by pooling
+        model.add(Conv2D(64, kernel_size=(5, 5), strides=(1, 1), activation='relu'))
+        model.add(MaxPooling2D(pool_size=(2, 2)))
+        # Final convolutional layer.
+        model.add(Conv2D(64, kernel_size=(3, 3), strides=(1, 1), activation='relu'))
+        
+        # Flatten the 3D output of the 64 filters with features from 2D images to a 1D vector.
         model.add(Flatten())
-        model.add(Dense(output_dim=512, activation='relu'))
-        model.add(Dense(output_dim=action_size, activation='linear'))
-
+        # Two dense layers to progressively reach a final output size of action_size.
+        model.add(Dense(1024, activation='relu'))
+        model.add(Dense(action_size, activation='linear'))
+        
         adam = Adam(lr=learning_rate)
-        model.compile(loss='mse',optimizer=adam)
-
-        return model
-    
-    @staticmethod    
-    def dueling_dqn(input_shape, action_size, learning_rate):
-
-        state_input = Input(shape=(input_shape))
-        x = Convolution2D(32, 8, 8, subsample=(4, 4), activation='relu')(state_input)
-        x = Convolution2D(64, 4, 4, subsample=(2, 2), activation='relu')(x)
-        x = Convolution2D(64, 3, 3, activation='relu')(x)
-        x = Flatten()(x)
-
-        # state value tower - V
-        state_value = Dense(256, activation='relu')(x)
-        state_value = Dense(1, init='uniform')(state_value)
-        state_value = Lambda(lambda s: K.expand_dims(s[:, 0], dim=-1), output_shape=(action_size,))(state_value)
-
-        # action advantage tower - A
-        action_advantage = Dense(256, activation='relu')(x)
-        action_advantage = Dense(action_size)(action_advantage)
-        action_advantage = Lambda(lambda a: a[:, :] - K.mean(a[:, :], keepdims=True), output_shape=(action_size,))(action_advantage)
-
-        # merge to state-action value function Q
-        state_action_value = merge([state_value, action_advantage], mode='sum')
-
-        model = Model(input=state_input, output=state_action_value)
-        #model.compile(rmsprop(lr=learning_rate), "mse")
-        adam = Adam(lr=learning_rate)
-        model.compile(loss='mse',optimizer=adam)
-
-        return model
-
-    @staticmethod    
-    def drqn(input_shape, action_size, learning_rate):
-
-        model = Sequential()
-        model.add(TimeDistributed(Convolution2D(32, 8, 8, subsample=(4,4), activation='relu'), input_shape=(input_shape)))
-        model.add(TimeDistributed(Convolution2D(64, 4, 4, subsample=(2,2), activation='relu')))
-        model.add(TimeDistributed(Convolution2D(64, 3, 3, activation='relu')))
-        model.add(TimeDistributed(Flatten()))
-
-        # Use all traces for training
-        #model.add(LSTM(512, return_sequences=True,  activation='tanh'))
-        #model.add(TimeDistributed(Dense(output_dim=action_size, activation='linear')))
-
-        # Use last trace for training
-        model.add(LSTM(512,  activation='tanh'))
-        model.add(Dense(output_dim=action_size, activation='linear'))
-
-        adam = Adam(lr=learning_rate)
-        model.compile(loss='mse',optimizer=adam)
-
-        return model
+        model.compile(loss='mse', optimizer=adam)

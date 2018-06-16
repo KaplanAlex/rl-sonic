@@ -14,14 +14,11 @@ def preprocess_obs(obs, size):
     Observations from the sonic game are 320x224 pixel RGB images.
     with shape (224, 320, 3) - 224 rows, 320 columns, stack 3 times.
     """
-    # 
     
-    img = skimage.color.rgb2gray(obs)
-
-    visualize_img(img)
-
-    resized_img = skimage.transform.resize(img, size)
-    visualize_img(resized_img)
+    bw_img = skimage.color.rgb2gray(obs)
+    resized_img = skimage.transform.resize(bw_img, size)
+    
+    return resized_img
 
 def visualize_img(img):
     """
