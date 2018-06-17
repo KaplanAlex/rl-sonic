@@ -1,33 +1,41 @@
 # # Starting agent
+import numpy as np
 from retro_contest.local import make
 import skimage
 from skimage.viewer import ImageViewer
 
-import time
-
-#from dqn_agent import DQN_Agent
-#from networks import Networks
+from dqn_agent import DQN_Agent
+from networks import Networks
 from util import preprocess_obs
 
 def main():
     env = make(game='SonicTheHedgehog2-Genesis', state='EmeraldHillZone.Act1')
-    env.reset()
+    first_obs  = env.reset()
     
-    # Following preprocessing, the game scene will be reflected
-    # as a stack of 4 64x64 black and white images.
+    # Parameters for observation image size processing.
     img_rows = 128
     img_cols = 128          
-    # img_stack = 4        
+    img_stack = 4        
 
-    # input_size = (img_rows, img_cols, img_stack)
-    # action_size = 8         # 8 valid button combinations
+    action_size = 8         # 8 valid button combinations
+    input_size = (img_rows, img_cols, img_stack)
+    
 
-    # dqn_agent = DQN_Agent(input_size, action_size)
-    # dqn_agent.main_model = Networks.dqn(input_size, action_size, dqn_agent.main_lr)
-    # dqn_agent.target_model = Networks.dqn(input_size, action_size, dqn_agent.target_lr)
-    action = [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]
-    obs, rew, done, info = env.step(action)
-    preprocess_obs(obs, size=(img_rows, img_cols))
+    dqn_agent = DQN_Agent(input_size, action_size)
+    dqn_agent.main_model = Networks.dqn(input_size, action_size, dqn_agent.main_lr)
+    dqn_agent.target_model = Networks.dqn(input_size, action_size, dqn_agent.target_lr)
+    
+    
+    # Experiences are a stack of the 4 most frames to provide temporal information.
+    # Initialize this sequence to the first observation stacked 4 times.
+    processed = preprocess_obs(first_obs, size=(img_rows, img_cols))
+    # (128, 128, 4)
+    exp_stack = np.stack(([processed]*4), axis = 2)
+    
+    
+    
+    
+    
     
     # while True:
     #     # Left

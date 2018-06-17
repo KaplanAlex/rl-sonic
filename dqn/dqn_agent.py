@@ -10,7 +10,7 @@ these 8 actions to expedite training and exploration.
 """
 
 from collections import deque
-from keras import load_model, save_model
+from keras.models import load_model
 import numpy as np
 import random
 
@@ -40,9 +40,11 @@ class DQN_Agent:
         self.final_epsilon = 0.0001
         
         self.frame_per_action = 4
-        self.update_target_freq = 3000 
+        self.update_target_freq = 8192 
         self.timestep_per_train = 100 # Number of timesteps between training interval
 
+        self.batch_size = 32
+        
         # Memory for experience replay
         self.memory = deque(maxlen=50000)
         
@@ -82,7 +84,7 @@ class DQN_Agent:
             # Predict the value associated with each action given the 
             # input state. Greedily choose the best action.
             action_values = self.main_model.predict(input_state)
-            action_idx = np.argmax(q)
+            action_idx = np.argmax(action_values)
             
         new_action = self.action_switch[action_idx]
 
@@ -109,7 +111,7 @@ class DQN_Agent:
         self.target_model.set_weights(self.main_model.get_weights())
 
 
-    def initialize_action_switch(self, act_idx):
+    def initialize_action_switch(self):
         """
         Initialize a mapping from the index of an action 
         selection to an action executable within the environment. 
@@ -125,21 +127,21 @@ class DQN_Agent:
         """
         # Map indicies to arrays with 12 values encoding button presses
         # (B, A, MODE, START, UP, DOWN, LEFT, RIGHT, C, Y, X, Z)
-        self.action_switch = {
+        action_switch = {
             # No Operation
-            0: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            0: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             # Left
-            1: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]
+            1: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
             # Right
-            2: [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]
+            2: [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
             # Left, Down
-            3: [0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0]
+            3: [0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0],
             # Right, Down
-            4: [0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0]
+            4: [0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0],
             # Down
-            5: [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+            5: [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
             # Down, B
-            6: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+            6: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
             # B
             7: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         }
@@ -165,5 +167,5 @@ class DQN_Agent:
         
         Useful for pausing and restarting training.
         """
-        self.main_model = save_model("dqn_main.h5")
-        self.target_model = save_model("dqn_target.h5")
+        self.main_model.save("dqn_main.h5")
+        self.target_model.save("dqn_target.h5")
