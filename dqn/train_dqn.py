@@ -37,10 +37,6 @@ def main():
     exp_stack = np.expand_dims(exp_stack, axis=0) # 1x64x64x4
 
     
-    
-
-    
-    
     print(exp_stack.shape)
     num_samples = 10
 
@@ -58,6 +54,7 @@ def main():
                 
                 timestep += 1
                 print("Epsisode: ", episode, " Timestep: ", timestep)
+        
         dqn_agent.save_models()
 
     # while True:

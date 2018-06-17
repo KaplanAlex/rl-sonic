@@ -19,11 +19,9 @@ class DQN_Agent:
     
     def __init__(self, input_size, action_size):
         """
-        args:
-            input_size: 
-                The dimension of input observations.
-            action_size:
-                The dimension of the available actions.           
+        Arguments:
+            - input_size: The dimension of input observations.
+            - action_size: The dimension of the available actions.           
         """
         # Model structure parameters
         self.input_size = input_size
@@ -66,16 +64,14 @@ class DQN_Agent:
         based on the current DQN model, acting randomly
         self.epsilon portion of the time (encourages exploration).
 
-        args:
-            input_state:
-                Information about the world used to predict the 
-                optimal aciton.
+        Arguments:
+            - input_state: Information about the world used to predict ]
+              the optimal aciton.
         Return:
-            act_idx: The index of the optimal action action as 
-            determined by the current model.
-
-            new_action: The executable action (button combination)
-            represented by act_idx.
+            - act_idx: The index of the optimal action action as 
+              determined by the current model.
+            - new_action: The executable action (button combination)
+              represented by act_idx.
         """
 
         if np.random.rand() <= self.epsilon:
@@ -95,9 +91,17 @@ class DQN_Agent:
         Save an experience <state, action, reward, next_state, done> tuple
         to memory to be used in training. Memories are saved to separate
         the exploration/ information gathering process from learning.
+
+        Arguments:
+            - state: A (1, 128, 128, 4) np.array containing 4 preprocessed
+              frames from the sonic game.
+            - act_idx: The index of the action prediction made by the agent.
+            - reward: The reward received for taking the action
+            - next_state: A (1, 128, 128, 4) np.array containing 3 of the
+              prevous frames and the new frame resulting from taking the action.
+            - done: Boolean representing the end of the episode.
         """
         self.memory.append((state, act_idx, reward, next_state, done))
-
 
     def update_target_model(self):
         """
@@ -110,6 +114,60 @@ class DQN_Agent:
         """
         self.target_model.set_weights(self.main_model.get_weights())
 
+    def replay_update(self):
+        """
+        Updates the "main_model" based on "batch_size" stochastically sampled
+        memories.
+        """
+        # "batch_size" stochastically sampled memories.
+        mini_batch = random.sample(self.memory, self.batch_size)
+        
+        # Batch size experiences - (batch_size, img_rows, img_cols, 4)
+        update_input = np.zeros(((self.batch_size,) + self.input_size)) 
+        update_target = np.zeros(((self.batch_size,) + self.input_size)) 
+        action, reward, done = [], [], []
+
+        # Extract information from the sampled memories.
+        for i in range(self.batch_size):
+            # Append each state (1, 128, 128, 4) to update_input
+            update_input[i,:,:,:] = mini_batch[i][0]
+            action.append(mini_batch[i][1])
+            reward.append(mini_batch[i][2])
+            # Append Next State (1, 128, 128, 4) to update_target
+            update_target[i,:,:,:] = mini_batch[i][3]
+            done.append(mini_batch[i][4])
+
+        # Predict the q values for each input - (batch_size, action_size)
+        prediction = self.main_model.predict(update_input) 
+        
+        # Predict the values associated with acting optimally from next state.
+        next_state_pred = self.main_model.predict(update_target)
+        target_pred = self.target_model.predict(update_target)
+
+        for sample_idx in range(self.batch_size):
+            # For terminal actions, set the value associated with the action to
+            # the observed reward
+            if done[sample_idx]:
+                predicted_val = reward[sample_idx]
+            else:
+                # Otherwise, set the value to the observed reward + the discounted
+                # predicted value of acting optimally from the next state on.
+                #
+                # The predicted update values are taken from the "fixed" target_model,
+                # while the action is selected from the dynamic main_model. This provides
+                # consistency between training iterations as the q values of the "fixed"
+                # model do not change every iteartion
+                next_action = np.argmax(next_state_pred[sample_idx])
+                predicted_val = reward[sample_idx] + self.gamma * (target_pred[sample_idx][next_action])
+        
+        prediction[sample_idx][action[sample_idx]] = predicted_val
+        
+        # Fit the current model to the updated q values predictions through
+        # a single gradient descent update which implements bellman's equation.
+        # Q(state, action) = reward + y(max(Q(next_state, next_action))
+        loss = self.main_model.train_on_batch(update_input, prediction)
+
+        return np.amax(prediction[-1]), loss
 
     def initialize_action_switch(self):
         """
@@ -119,11 +177,11 @@ class DQN_Agent:
         game, each which can be encoded as an array of 12 booleans
         representing button presses.
 
-        args:
-            act_idx: The index of the action selected by the model.
-        returns:
-            action_switch: A mapping from the index of an action to
-            an array encoding the button presses to execute the action.
+        Arguments:
+            - act_idx: The index of the action selected by the model.
+        Returns:
+            - action_switch: A mapping from the index of an action to
+              an array encoding the button presses to execute the action.
         """
         # Map indicies to arrays with 12 values encoding button presses
         # (B, A, MODE, START, UP, DOWN, LEFT, RIGHT, C, Y, X, Z)
@@ -155,7 +213,6 @@ class DQN_Agent:
         main_model    <-  "dqn_main.h5"
         target_model  <-  "dqn_target.h5"
         """
-
         self.main_model = load_model("dqn_main.h5")
         self.target_model = load_model("dqn_target.h5")
 
