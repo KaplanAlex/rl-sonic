@@ -159,7 +159,7 @@ class DQN_Agent:
         self.main_model = load_model("dqn_main.h5")
         self.target_model = load_model("dqn_target.h5")
 
-    def save_models(self, name):
+    def save_models(self):
         """
         Save the current models to the following locations:
         main_model    ->  "dqn_main.h5"

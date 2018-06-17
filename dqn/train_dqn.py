@@ -32,15 +32,34 @@ def main():
     processed = preprocess_obs(first_obs, size=(img_rows, img_cols))
     # (img_rows, img_cols, img_stack)
     exp_stack = np.stack(([processed]*img_stack), axis = 2)
-    #TODO expand dimension for idk yet (1, img_rows, img_cols, img_stack)
+    # Expand dimension to stack and submit multiple exp_stacks in  a batch
+    # (1, img_rows, img_cols, img_stack).
     exp_stack = np.expand_dims(exp_stack, axis=0) # 1x64x64x4
 
-    print(exp_stack.shape)
     
-    # for episode in range(EPISODES):
+    
 
     
     
+    print(exp_stack.shape)
+    num_samples = 10
+
+    zero_test = np.zeros(((num_samples,) + input_size))
+    print(zero_test.shape)
+    
+    # One episode is 4500 steps if not completed 
+    # 5 minutes of frames at 1/15th of a second = 4 60Hz frames
+    for episode in range(EPISODES):
+        done = False
+        timestep = 0
+        while not done:
+                action = [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]
+                obs, rew, done, info = env.step(action)
+                
+                timestep += 1
+                print("Epsisode: ", episode, " Timestep: ", timestep)
+        dqn_agent.save_models()
+
     # while True:
     #     # Left
     #     action = [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]
