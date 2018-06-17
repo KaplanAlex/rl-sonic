@@ -6,6 +6,7 @@ from skimage.viewer import ImageViewer
 
 from dqn_agent import DQN_Agent
 from networks import Networks
+from parameters import EPISODES
 from util import preprocess_obs
 
 def main():
@@ -26,15 +27,18 @@ def main():
     dqn_agent.target_model = Networks.dqn(input_size, action_size, dqn_agent.target_lr)
     
     
-    # Experiences are a stack of the 4 most frames to provide temporal information.
+    # Experiences are a stack of the img_stack most frames to provide temporal information.
     # Initialize this sequence to the first observation stacked 4 times.
     processed = preprocess_obs(first_obs, size=(img_rows, img_cols))
-    # (128, 128, 4)
-    exp_stack = np.stack(([processed]*4), axis = 2)
+    # (img_rows, img_cols, img_stack)
+    exp_stack = np.stack(([processed]*img_stack), axis = 2)
+    #TODO expand dimension for idk yet (1, img_rows, img_cols, img_stack)
+    exp_stack = np.expand_dims(exp_stack, axis=0) # 1x64x64x4
+
+    print(exp_stack.shape)
     
-    
-    
-    
+    # for episode in range(EPISODES):
+
     
     
     # while True:
