@@ -1,1 +1,4 @@
 __pycache*
+
+# Dont push models
+*.h5

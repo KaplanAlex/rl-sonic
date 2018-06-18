@@ -32,15 +32,26 @@ class DQN_Agent:
         self.main_lr = 0.0001
         self.target_lr = 0.0001
         
+        # Intial observation timesteps - epsilon is not changed and 
+        # training does not occur during initial observation. 
+        self.observation_timesteps = 1000
+
         # Exploration rate.
         self.epsilon = 1.0
         self.initial_epsilon = 1.0
         self.final_epsilon = 0.0001
         
+        # Timesteps between initial and final epsilon following 
+        # initial observation phase
+        self.exploration_timesteps = 1000000
+
         self.frame_per_action = 4
         self.update_target_freq = 8192 
-        self.timestep_per_train = 100 # Number of timesteps between training interval
-
+        
+        # Number of timesteps between training intervals.
+        self.timestep_per_train = 1000 
+        
+        # Number of experiences used simultaneously in training.
         self.batch_size = 32
         
         # Memory for experience replay
@@ -215,6 +226,7 @@ class DQN_Agent:
         """
         self.main_model = load_model("dqn_main.h5")
         self.target_model = load_model("dqn_target.h5")
+        print("Models Loaded")
 
     def save_models(self):
         """
@@ -226,3 +238,5 @@ class DQN_Agent:
         """
         self.main_model.save("dqn_main.h5")
         self.target_model.save("dqn_target.h5")
+
+        print("Models saved")
