@@ -4,5 +4,5 @@ Reinforcement Learning methods to play sonic loosely encouraged by the OpenAi re
 
 ![Training Start GIF](https://i.imgur.com/fJb6NEh.gif)
 
-![Training Start GIF](https://i.imgur.com/GRyEVXc.gifv)
+![Training Start GIF](https://i.imgur.com/GRyEVXc.gif)
 
