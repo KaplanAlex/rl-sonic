@@ -6,4 +6,4 @@ Constants
 EPISODES = 1000
 
 # Load previous models or instantiate new networks
-LOAD_MODELS = True
+LOAD_MODELS = False
