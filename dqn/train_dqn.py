@@ -33,15 +33,15 @@ def main():
     
     # One episode is 4500 steps if not completed 
     # 5 minutes of frames at 1/15th of a second = 4 60Hz frames
-    target_update = 0               # Count up to dqn_agent.update_target_freq
-    train_step = 0                  # Count to dqn.timestep_per_train
-    obs_timestep = 0               # Count to the end of the observation phase
+    total_timestep = 0              # Total number of timesteps over all episodes.
+    
+    
     for episode in range(EPISODES):
         done = False
-
-
+        reward_sum = 0          # Average reward within episode.
+        timestep = 0            # Track timesteps within the episode.
         first_obs  = env.reset()
-
+        mean_rewards = []
 
         # Experiences are a stack of the img_stack most frames to provide 
         # temporal information. Initialize this sequence to the first 
@@ -52,11 +52,10 @@ def main():
         # Expand dimension to stack and submit multiple exp_stacks in  a batch
         # (1, img_rows, img_cols, img_stack).
         exp_stack = np.expand_dims(exp_stack, axis=0) # 1x64x64x4
-
-        # Track timesteps within the episode
-        timestep = 0
+        
+        # Continue until the end of the zone is reached or 4500 timesteps have 
+        # passed.
         while not done:
-                
                 # Predict an action to take based on the most recent
                 # experience. 
                 # 
@@ -69,9 +68,11 @@ def main():
 
                 # Track various events
                 timestep += 1
-                train_step += 1
-                target_update += 1
-                obs_timestep += 1
+                total_timestep += 1
+
+                reward_sum += reward
+                curr_mean = reward_sum / timestep
+                mean_rewards.append(curr_mean)
                 
                 obs = preprocess_obs(obs, size=(img_rows, img_cols))
                 
@@ -88,18 +89,16 @@ def main():
                 exp_stack = exp_stack_new
                 
                 # In the observation phase skip training updates and decrmenting epsilon.
-                if (obs_timestep >= dqn_agent.observation_timesteps):
+                if (total_timestep >= dqn_agent.observation_timesteps):
                      
                     # Update the target model with the main model's weights.
-                    if (target_update >= dqn_agent.update_target_freq):
+                    if ((total_timestep % dqn_agent.update_target_freq) == 0):
                         dqn_agent.update_target_model()
-                        target_update = 0
 
                     # Train the agent on saved experiences.
-                    if (train_step >= dqn_agent.timestep_per_train):
+                    if ((total_timestep % dqn_agent.timestep_per_train) == 0):
                             dqn_agent.replay_update()
                             dqn_agent.save_models()
-                            train_step = 0
                         
                     if (dqn_agent.epsilon > dqn_agent.final_epsilon):
                         # Decrease epsilon by a fraction of the range such that epsilon decreases
@@ -107,14 +106,15 @@ def main():
                         dec = ((dqn_agent.initial_epsilon - dqn_agent.final_epsilon) / dqn_agent.exploration_timesteps)
                         dqn_agent.epsilon -= dec
 
-                print("Epsisode: ", episode, " Timestep: ", timestep, "Action: ", act_idx, "Epsilon:", dqn_agent.epsilon)
-                
-                # info: {'score': 0, 'screen_x_end': 10656, 'screen_y': 525, 
-                # 'lives': 3, 'x': 96, 'zone': 0, 'act': 0, 'y': 594, 
-                # 'level_end_bonus': 0, 'screen_x': 0, 'rings': 4, 'game_mode': 12}
                 print(info)
-                print(reward)
-
+                print("Epsisode:", episode, " Timestep:", timestep, " Action:", act_idx, " Mean Episode Reward:", curr_mean, " Epsilon:", dqn_agent.epsilon)
+                
+        # Save mean rewards at the end of the episode - append to stats file            
+        with open("../statistics/dqn_stats.csv", "a") as stats_fd:
+            for reward in mean_rewards:
+                reward_str = str(reward) + ",\n"
+                stats_fd.write(str(reward_str))
+            stats_fd.close()
 # Run main
 if __name__ == '__main__':
     main()
