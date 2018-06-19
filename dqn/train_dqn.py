@@ -41,7 +41,6 @@ def main():
         reward_sum = 0          # Average reward within episode.
         timestep = 0            # Track timesteps within the episode.
         first_obs  = env.reset()
-        mean_rewards = []
 
         # Experiences are a stack of the img_stack most frames to provide 
         # temporal information. Initialize this sequence to the first 
@@ -70,10 +69,7 @@ def main():
                 timestep += 1
                 total_timestep += 1
 
-                reward_sum += reward
-                curr_mean = reward_sum / timestep
-                mean_rewards.append(curr_mean)
-                
+                reward_sum += reward                
                 obs = preprocess_obs(obs, size=(img_rows, img_cols))
                 
                 # Create a 1st dimension for stacking experiences and a 4th for 
@@ -106,15 +102,14 @@ def main():
                         dec = ((dqn_agent.initial_epsilon - dqn_agent.final_epsilon) / dqn_agent.exploration_timesteps)
                         dqn_agent.epsilon -= dec
 
-                print(info)
-                print("Epsisode:", episode, " Timestep:", timestep, " Action:", act_idx, " Mean Episode Reward:", curr_mean, " Epsilon:", dqn_agent.epsilon)
+                # print(info)
+                print("Epsisode:", episode, " Timestep:", timestep, " Action:", act_idx, " Episode Reward Sum:", reward_sum, " Epsilon:", dqn_agent.epsilon)
                 
-        # Save mean rewards at the end of the episode - append to stats file            
+        # Save mean episode reward at the end of the episode - append to stats file            
         with open("../statistics/dqn_stats.csv", "a") as stats_fd:
-            for reward in mean_rewards:
-                reward_str = str(reward) + ",\n"
-                stats_fd.write(str(reward_str))
-            stats_fd.close()
+            reward_str = "Epsiode Cummulative Reward: " + str(reward_sum) + ", Episode Timestpes: " +  str(timestep) + ",\n"
+            stats_fd.write(str(reward_str))
+            
 # Run main
 if __name__ == '__main__':
     main()

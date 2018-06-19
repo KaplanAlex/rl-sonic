@@ -1,7 +1,7 @@
 
 
 from keras.models import Sequential, Model
-from keras.layers import Conv2D, Dense, Flatten, MaxPooling2D
+from keras.layers import Conv2D, Dense, Flatten, MaxPooling2D, Add
 from keras.optimizers import Adam
 
 
@@ -9,14 +9,17 @@ class Networks(object):
     """
     Collection of networks used in various RL solution  implementations.
     Featuring:
-        DQN - Deep Q-Network
+        DQN           -  Deep Q-Network (Also can be used as Double DQN)
+        Dueling DQN   -  DQN with Q(s,a) separated into V(s) and A(s,a)
     """
 
     @staticmethod    
     def dqn(input_shape, action_size, learning_rate):
         """
-        A convolutional neural network to approximate the q function relating
-        (state, action) pairs to 
+        A convolutional neural network to approximate the q function.
+        This network is comprised of 3 convolutional and pooling layers
+        which culminate in a series of fully connected layers which
+        ultimately output a value for each potential action.
 
         Arguments:
             - input_shape: The dimensions of the input tensor 
@@ -48,5 +51,58 @@ class Networks(object):
         # Q(s, a) = r + ymax(a)(Q(s'a'))
         adam = Adam(lr=learning_rate)
         model.compile(loss='mse', optimizer=adam)
+
+        return model
+    
+    @staticmethod    
+    def dueling_dqn(input_shape, action_size, learning_rate):
+        """
+        Neural network to approximate the q function similar to dqn.
+        However, instead of directly approximating q values, this network
+        breaks the value Q(s,a) - which respresents the value of being in
+        state s and taking action a - into V(s) + A(s,a), which represent
+        the value of being in state s and how much better action a is than 
+        all other actions given state s respectively.  
+        
+        The final layer of the network sums the predicted V(s) and A(s,a) to
+        yield the q value: Q(s,a) = V(s) + A(s,a). 
+
+        Arguments:
+            - input_shape: The dimensions of the input tensor 
+              (height, width, channels).
+            
+            - action_size: The number of actions the agent can take. Dictates
+              that number of nodes in the output layer.
+            
+            - learning_rate: The rate of change of the optimizer.
+        """
+        # Outline the network with the Keras functional API to specify the connection
+        # of certain outputs to specific layers.
+        input_layer = Input(shape=(input_shape))
+        # Use the same convolutional layer outline (windows, strides, and pooling) as dqn.
+        conv1 = Conv2D(32, kernel_size=(6, 6), strides=(1, 1),  activation='relu')(state_input)
+        pool1 = MaxPooling2D(pool_size=(2, 2), strides=(2, 2))(conv1)
+        conv2 = Conv2D(64, kernel_size=(5, 5), strides=(1, 1), activation='relu')(pool1)
+        pool2 = MaxPooling2D(pool_size=(2, 2), strides=(2, 2))(conv2)
+        conv3 = Conv2D(64, kernel_size=(3, 3), strides=(1, 1), activation='relu')(pool2)
+        conv_out = Flatten()(conv3)
+
+        # Value - V(s)
+        value_layer = Dense(256, activation='relu')(conv_out)
+        value_layer = Dense(1, init='uniform')(value_layer)
+        value_layer = Lambda(lambda s: K.expand_dims(s[:, 0], axis=-1), output_shape=(action_size,))(value_layer)
+
+        # Advantage tower - A
+        advantage_layer = Dense(256, activation='relu')(conv_out)
+        advantage_layer = Dense(action_size)(advantage_layer)
+        advantage_layer = Lambda(lambda a: a[:, :] - K.mean(a[:, :], keepdims=True), output_shape=(action_size,))(advantage_layer)
+
+        # merge the separate portions of the network to yield Q(s,a)
+        action_value = Add([value_layer, advantage_layer])
+        
+        model = Model(input=state_input, output=action_value)
+        
+        adam = Adam(lr=learning_rate)
+        model.compile(loss='mse',optimizer=adam)
 
         return model

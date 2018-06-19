@@ -16,7 +16,13 @@ import random
 
 
 class DQN_Agent:
+    """
+    Implementation of a Double DQN agent. Approximates the Q function
+    mapping (state, action) pairs to values to learn to play sonic.
     
+    Depending on the selected models, this agent can also act as a
+    Dueling DQN.
+    """
     def __init__(self, input_size, action_size):
         """
         Arguments:
