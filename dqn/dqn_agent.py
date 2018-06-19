@@ -34,7 +34,7 @@ class DQN_Agent:
         
         # Intial observation timesteps - epsilon is not changed and 
         # training does not occur during initial observation. 
-        self.observation_timesteps = 1000
+        self.observation_timesteps = 3000
 
         # Exploration rate.
         self.epsilon = 1.0
@@ -52,7 +52,7 @@ class DQN_Agent:
         self.timestep_per_train = 1000 
         
         # Number of experiences used simultaneously in training.
-        self.batch_size = 32
+        self.batch_size = 64
         
         # Memory for experience replay
         self.memory = deque(maxlen=50000)
@@ -124,6 +124,7 @@ class DQN_Agent:
         own predictions which can easily lead to divergence.
         """
         self.target_model.set_weights(self.main_model.get_weights())
+        print("Target Model Updated")
 
     def replay_update(self):
         """
