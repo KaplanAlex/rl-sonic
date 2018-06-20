@@ -1,7 +1,9 @@
 
 
+
+from keras import backend as K
+from keras.layers import Input, Conv2D, Dense, Flatten, MaxPooling2D, Add, Lambda
 from keras.models import Sequential, Model
-from keras.layers import Conv2D, Dense, Flatten, MaxPooling2D, Add
 from keras.optimizers import Adam
 
 
@@ -80,7 +82,7 @@ class Networks(object):
         # of certain outputs to specific layers.
         input_layer = Input(shape=(input_shape))
         # Use the same convolutional layer outline (windows, strides, and pooling) as dqn.
-        conv1 = Conv2D(32, kernel_size=(6, 6), strides=(1, 1),  activation='relu')(state_input)
+        conv1 = Conv2D(32, kernel_size=(6, 6), strides=(1, 1),  activation='relu')(input_layer)
         pool1 = MaxPooling2D(pool_size=(2, 2), strides=(2, 2))(conv1)
         conv2 = Conv2D(64, kernel_size=(5, 5), strides=(1, 1), activation='relu')(pool1)
         pool2 = MaxPooling2D(pool_size=(2, 2), strides=(2, 2))(conv2)
@@ -98,9 +100,9 @@ class Networks(object):
         advantage_layer = Lambda(lambda a: a[:, :] - K.mean(a[:, :], keepdims=True), output_shape=(action_size,))(advantage_layer)
 
         # merge the separate portions of the network to yield Q(s,a)
-        action_value = Add([value_layer, advantage_layer])
+        action_value = Add()([value_layer, advantage_layer])
         
-        model = Model(input=state_input, output=action_value)
+        model = Model(input=input_layer, output=action_value)
         
         adam = Adam(lr=learning_rate)
         model.compile(loss='mse',optimizer=adam)

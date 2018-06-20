@@ -6,7 +6,7 @@ from skimage.viewer import ImageViewer
 
 from dqn_agent import DQN_Agent
 from networks import Networks
-from parameters import EPISODES, LOAD_MODELS
+from parameters import EPISODES, LOAD_MODELS, EPSILON, START, MIDDLE, FINAL
 from util import preprocess_obs
 
 def main():
@@ -31,11 +31,16 @@ def main():
         dqn_agent.main_model = Networks.dqn(input_size, action_size, dqn_agent.main_lr)
         dqn_agent.target_model = Networks.dqn(input_size, action_size, dqn_agent.target_lr)
     
+    if (EPSILON == START):
+        dqn_agent.epsilon = dqn_agent.initial_epsilon
+    elif (EPSILON == MIDDLE):
+        dqn_agent.epsilon = ((dqn_agent.initial_epsilon - dqn_agent.final_epsilon) / 2)
+    else:
+        dqn_agent.epsilon = dqn_agent.final_epsilon
+
     # One episode is 4500 steps if not completed 
     # 5 minutes of frames at 1/15th of a second = 4 60Hz frames
     total_timestep = 0              # Total number of timesteps over all episodes.
-    
-    
     for episode in range(EPISODES):
         done = False
         reward_sum = 0          # Average reward within episode.
@@ -63,7 +68,7 @@ def main():
                 # network here as it represents a batch size of 1.
                 act_idx, action = dqn_agent.act(exp_stack)
                 obs, reward, done, info = env.step(action)
-                #env.render()
+                # env.render()
 
                 # Track various events
                 timestep += 1

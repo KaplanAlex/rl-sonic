@@ -1,27 +1,27 @@
-"""
-Basic DQN Implementation.
 
-DQNs approximate the q function which maps (state, action) pairs 
-to values. 
-
-Only 8 of the valid 2^12 Sega Genesis button combinations
-are relevant to Sonic, thus the action space is restriticted to
-these 8 actions to expedite training and exploration.
-"""
 
 from collections import deque
 from keras.models import load_model
 import numpy as np
 import random
 
+from priority_memory import PriorityMemory
 
-class DQN_Agent:
+
+class DQN_PER_Agent:
     """
-    Implementation of a Double DQN agent. Approximates the Q function
-    mapping (state, action) pairs to values to learn to play sonic.
+    DQN with Prioritized Experience Replay (PER)
+
+    This implementation improves "dqn_agent.py" by changing the uniform sampling 
+    experience replay policy to prioritized experience replay (PER). PER encourages 
+    the selection of experiences with large error between the predicted Q and target
+    values, as these memories provide the best insight into performance of the model. 
     
+    PER has been shown to decrease training time significantly (by a factor of 2)
+    in many ALE environments.
+
     Depending on the selected models, this agent can also act as a
-    Dueling DQN.
+    Dueling Double DQN with PER.
     """
     def __init__(self, input_size, action_size):
         """
@@ -61,7 +61,7 @@ class DQN_Agent:
         self.batch_size = 64
         
         # Memory for experience replay
-        self.memory = deque(maxlen=50000)
+        self.memory = PriorityMemory(50000)
         
         # Main model used to predict q-values.
         self.main_model = None 
@@ -118,8 +118,15 @@ class DQN_Agent:
               prevous frames and the new frame resulting from taking the action.
             - done: Boolean representing the end of the episode.
         """
-        self.memory.append((state, act_idx, reward, next_state, done))
+        experience = (state, act_idx, reward, next_state, done)
+        
+        # Determine the error between the q and target values for this experience.
+        _, _, error = self.compute_targets([experience])
 
+        # Save the memory with its priority to encourage sampling based on its 
+        # influence.
+        self.memory.add(experience, error[0])
+    
     def update_target_model(self):
         """
         Update the target model with the weights of updated model
@@ -132,14 +139,23 @@ class DQN_Agent:
         self.target_model.set_weights(self.main_model.get_weights())
         print("Target Model Updated")
 
-    def replay_update(self):
+
+    def compute_targets(self, mini_batch):
         """
-        Updates the "main_model" based on "batch_size" stochastically sampled
-        memories.
-        """
-        # "batch_size" stochastically sampled memories.
-        mini_batch = random.sample(self.memory, self.batch_size)
+        Computes the target values and prediction error for all experiences 
+        in a minibatch.
+
+        Arguments:
+            - mini_batch: A collection of 1+ experiences sampled from memory.
         
+        Returns:
+            - update_input: Collection of input states parsed from sampled 
+              experiences. Formatted for network training.
+            - prediction: New predicted Q values associated with each input 
+              state.
+            - error: The difference between the previous and updated q value 
+              for the changed action for each sampled experience.
+        """
         # Batch size experiences - (batch_size, img_rows, img_cols, 4)
         update_input = np.zeros(((self.batch_size,) + self.input_size)) 
         update_target = np.zeros(((self.batch_size,) + self.input_size)) 
@@ -162,7 +178,11 @@ class DQN_Agent:
         next_state_pred = self.main_model.predict(update_target)
         target_pred = self.target_model.predict(update_target)
 
+        error = []
         for sample_idx in range(self.batch_size):
+            # Q-value prior to update
+            prev_q = next_state_pred[sample_idx][action[sample_idx]]
+
             # For terminal actions, set the value associated with the action to
             # the observed reward
             if done[sample_idx]:
@@ -177,8 +197,34 @@ class DQN_Agent:
                 # model do not change every iteartion
                 next_action = np.argmax(next_state_pred[sample_idx])
                 predicted_val = reward[sample_idx] + self.gamma * (target_pred[sample_idx][next_action])
+            error.append(abs(prev_q - predicted_val))
         
+        # Update the q value associated with the action taken.
         prediction[sample_idx][action[sample_idx]] = predicted_val
+
+        return update_input, prediction, error
+
+
+
+    def replay_update(self):
+        """
+        Updates the "main_model" based on "batch_size" stochastically sampled
+        memories.
+        """
+        
+        # Sample memories based on priorities. Also returns the index 
+        # of each sampled experience (to facilitate updates).
+        mini_batch, indicies = self.memory.sample(self.batch_size)
+        
+        # Extract the observed state from the minibatch and compute the update targets
+        # and error.
+        update_input, prediction, error = self.compute_targets(mini_batch)
+
+        # Update the priorities of all sampled memories.
+        for i in range(self.batch_size):
+            idx = indicies[i]
+            self.memory.update(idx, error[i])
+
         # Fit the current model to the updated q values predictions through
         # a single gradient descent update which implements bellman's equation.
         # Q(state, action) = reward + y(max(Q(next_state, next_action))
