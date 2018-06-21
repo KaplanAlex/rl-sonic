@@ -21,7 +21,7 @@ class DQN_Agent:
     mapping (state, action) pairs to values to learn to play sonic.
     
     Depending on the selected models, this agent can also act as a
-    Dueling DQN.
+    Dueling Double DQN.
     """
     def __init__(self, input_size, action_size):
         """

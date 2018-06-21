@@ -1,8 +1,8 @@
 
-
+import math
 
 from keras import backend as K
-from keras.layers import Input, Conv2D, Dense, Flatten, MaxPooling2D, Add, Lambda
+from keras.layers import Input, Conv2D, Dense, Flatten, MaxPooling2D, Add, Lambda, GaussianNoise
 from keras.models import Sequential, Model
 from keras.optimizers import Adam
 
@@ -103,6 +103,59 @@ class Networks(object):
         action_value = Add()([value_layer, advantage_layer])
         
         model = Model(input=input_layer, output=action_value)
+        
+        adam = Adam(lr=learning_rate)
+        model.compile(loss='mse',optimizer=adam)
+
+        return model
+
+
+    @staticmethod    
+    def noisy_dueling_dqn(input_shape, action_size, learning_rate):
+        """
+        Dueling Double DQN (see "dueling_dqn") with the addition of a gaussian noise layer 
+        to provide trainable exploration parameters. Noise is added to the generated
+        Q values to add randomness to action selection. The weights on the noise addition
+        are trained with the network, allowing exploration to be rewarded, and thus
+        encouraged as the agent learns, and discouraged once the agent learns a reliable
+        policy.
+
+        Arguments:
+            - input_shape: The dimensions of the input tensor 
+              (height, width, channels).
+            
+            - action_size: The number of actions the agent can take. Dictates
+              that number of nodes in the output layer.
+            
+            - learning_rate: The rate of change of the optimizer.
+        """
+        # Outline the network with the Keras functional API to specify the connection
+        # of certain outputs to specific layers.
+        input_layer = Input(shape=(input_shape))
+        # Use the same convolutional layer outline (windows, strides, and pooling) as dqn.
+        conv1 = Conv2D(32, kernel_size=(6, 6), strides=(1, 1),  activation='relu')(input_layer)
+        pool1 = MaxPooling2D(pool_size=(2, 2), strides=(2, 2))(conv1)
+        conv2 = Conv2D(64, kernel_size=(5, 5), strides=(1, 1), activation='relu')(pool1)
+        pool2 = MaxPooling2D(pool_size=(2, 2), strides=(2, 2))(conv2)
+        conv3 = Conv2D(64, kernel_size=(3, 3), strides=(1, 1), activation='relu')(pool2)
+        conv_out = Flatten()(conv3)
+
+        # Value - V(s)
+        value_layer = Dense(256, activation='relu')(conv_out)
+        value_layer = Dense(1, init='uniform')(value_layer)
+        value_layer = Lambda(lambda s: K.expand_dims(s[:, 0], axis=-1), output_shape=(action_size,))(value_layer)
+
+        # Advantage tower - A
+        advantage_layer = Dense(256, activation='relu')(conv_out)
+        advantage_layer = Dense(action_size)(advantage_layer)
+        advantage_layer = Lambda(lambda a: a[:, :] - K.mean(a[:, :], keepdims=True), output_shape=(action_size,))(advantage_layer)
+
+        # merge the separate portions of the network to yield Q(s,a)
+        action_value = Add()([value_layer, advantage_layer])
+        # Deepmind paper suggests an implemntation of "factorized" gaussian noise with standard
+        # deviation = 1 / sqrt(# of inputs)
+        noise = GaussianNoise(1 / math.sqrt(action_size))(action_value)
+        model = Model(input=input_layer, output=noise)
         
         adam = Adam(lr=learning_rate)
         model.compile(loss='mse',optimizer=adam)

@@ -5,8 +5,9 @@ import skimage
 from skimage.viewer import ImageViewer
 
 from dqn_agent import DQN_Agent
+from dqn_PER_agent import DQN_PER_Agent
 from networks import Networks
-from parameters import EPISODES, LOAD_MODELS, EPSILON, START, MIDDLE, FINAL
+from parameters import EPISODES, LOAD_MODELS, EPSILON, START, MIDDLE, FINAL, PER_AGENT, DUELING
 from util import preprocess_obs
 
 def main():
@@ -22,14 +23,23 @@ def main():
     # Inputs to the agent's prediction network will have the following shape.
     input_size = (img_rows, img_cols, img_stack)
     
-    dqn_agent = DQN_Agent(input_size, action_size)
+    # Priortized Experience Replay.
+    if (PER_AGENT):
+        dqn_agent = DQN_PER_Agent(input_size, action_size)
+    else:
+        dqn_agent = DQN_Agent(input_size, action_size)
 
     # Load previous models, or instantiate new networks.
     if (LOAD_MODELS):
         dqn_agent.load_models()
     else:
-        dqn_agent.main_model = Networks.dqn(input_size, action_size, dqn_agent.main_lr)
-        dqn_agent.target_model = Networks.dqn(input_size, action_size, dqn_agent.target_lr)
+        # Use the dueling network.
+        if (DUELING):
+            dqn_agent.main_model = Networks.dueling_dqn(input_size, action_size, dqn_agent.main_lr)
+            dqn_agent.target_model = Networks.dueling_dqn(input_size, action_size, dqn_agent.target_lr)
+        else:
+            dqn_agent.main_model = Networks.dqn(input_size, action_size, dqn_agent.main_lr)
+            dqn_agent.target_model = Networks.dqn(input_size, action_size, dqn_agent.target_lr)
     
     if (EPSILON == START):
         dqn_agent.epsilon = dqn_agent.initial_epsilon
@@ -69,6 +79,11 @@ def main():
                 act_idx, action = dqn_agent.act(exp_stack)
                 obs, reward, done, info = env.step(action)
                 # env.render()
+
+                # Clip rewards.
+                if reward > 5:
+                    reward = 5
+
 
                 # Track various events
                 timestep += 1
