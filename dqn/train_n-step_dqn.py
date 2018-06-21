@@ -1,11 +1,14 @@
 """
-Training process applicaple to all combinations of the covered DQN
-extensions with the exception of the n-step method. 
+Logic to train the n-step DQN extension.
+This process differs from the general training process only how experiences are 
+processed and recorded. For this reason, all other extensions to the basic DQN
+model can be trained in conjunction with n-step with this script.
 
-
-For n-step training, see "train_n_step_dqn.py".
+n-step DQN improves the temporal awareness of the agent by saving a state,
+action pair in memory with the discounted sum of rewards over the next 'n' 
+steps and the 'nth' future state.
 """
-
+from collections import deque
 import numpy as np
 from retro_contest.local import make
 
@@ -30,7 +33,7 @@ def main():
     input_size = (img_rows, img_cols, img_stack)
     
     # File paths
-    stat_path = '../statistics/dqn'
+    stat_path = '../statistics/dqn_n-step'
 
     # Priortized Experience Replay.
     if (PER_AGENT):
@@ -74,6 +77,11 @@ def main():
     else:
         dqn_agent.epsilon = dqn_agent.final_epsilon
 
+    # Store rewards and states from the previous n state, action pairs to 
+    # create experiences.
+    prev_n_rewards = deque(maxlen=dqn_agent.n_step) 
+    prev_n_exp = deque(maxlen=dqn_agent.n_step)
+    
     # One episode is 4500 steps if not completed 
     # 5 minutes of frames at 1/15th of a second = 4 60Hz frames
     total_timestep = 0              # Total number of timesteps over all episodes.
@@ -81,11 +89,16 @@ def main():
         done = False
         reward_sum = 0          # Average reward within episode.
         timestep = 0            # Track timesteps within the episode.
-        first_obs  = env.reset()
+        
+        # Rewards and states must be consecutive to improve temporal awareness.
+        # Reset at the start of each episode to compensate for sudden scene change.
+        prev_n_rewards.clear()
+        prev_n_exp.clear()
 
         # Experiences are a stack of the img_stack most frames to provide 
         # temporal information. Initialize this sequence to the first 
         # observation stacked 4 times.
+        first_obs  = env.reset()
         processed = preprocess_obs(first_obs, size=(img_rows, img_cols))
         # (img_rows, img_cols, img_stack)
         exp_stack = np.stack(([processed]*img_stack), axis = 2)
@@ -105,26 +118,45 @@ def main():
                 act_idx, action = dqn_agent.act(exp_stack)
                 obs, reward, done, info = env.step(action)
                 # env.render()
-
                 
-                # Track various events
                 timestep += 1
                 total_timestep += 1
-
                 reward_sum += reward                
-                obs = preprocess_obs(obs, size=(img_rows, img_cols))
                 
                 # Create a 1st dimension for stacking experiences and a 4th for 
                 # stacking img_stack frames.
+                obs = preprocess_obs(obs, size=(img_rows, img_cols))
                 obs = np.reshape(obs, (1, img_rows, img_cols, 1))
                 
                 # Append the new observation to the front of the stack and remove
                 # the oldest (4th) frame.
                 exp_stack_new = np.append(obs, exp_stack[:, :, :, :3], axis=3)
+                
 
-                # Save the experience: <state, action, reward, next_state, done>. 
-                dqn_agent.save_memory(exp_stack, act_idx, reward, exp_stack_new, done)
+                # Save the previous state, selected action, and resulting reward
+                prev_n_rewards.appendleft(reward)
+                prev_n_exp.append((exp_stack, act_idx, done))
                 exp_stack = exp_stack_new
+                
+                # Once sufficent steps have been taken, discount rewards and save nth 
+                # previous experience
+                if (len(prev_n_rewards) >= dqn_agent.n_step):
+                    # Compute discounted reward
+                    reward_sum = 0
+                    for idx in range(prev_n_rewards):
+                        reward = prev_n_rewards[idx]
+                        # rewards are append left so that the most recent rewards are 
+                        # discounted the least.
+                        reward_sum += ((dqn_agent.gamma ** idx) * reward)
+                    
+                    # Experiences are pushed forward into the deque as more are appened. The
+                    # nth previous experience is at the last index.
+                    original_state, original_act, _ = prev_n_exp[-1]
+                    nth_state, _, nth_done = prev_n_exp[0]
+
+                # Save the nth previous state and predicted action the discounted sum of rewards
+                # and final state over the next n steps.
+                dqn_agent.save_memory(original_state, original_act, reward_sum, nth_state, nth_done)
                 
                 # In the observation phase skip training updates and decrmenting epsilon.
                 if (total_timestep >= dqn_agent.observation_timesteps):

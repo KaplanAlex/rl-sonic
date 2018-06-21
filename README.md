@@ -23,10 +23,10 @@ dramatically improves training efficiency and accuracy.
 #### Noisy DQN
 
 #### N-step DQN
-This extension imporves the temporal awareness of the agent by storing experiences as 
-**<st, a, R, st+n, done>**, where *st* is the state at timestep *t* and *a* is the action selected 
-(the same values stored in experience/ prioritized experience replay), *R* is the discounted sum of 
-rewards over the next *n* states (hence the name n-step) and *st+n* is the nth state following *st*.
+This extension improves the temporal awareness of the agent by storing experiences as 
+**<st, a, R, st+n, done>**, where **st** is the state at timestep **t** and **a** is the action selected 
+(the same values stored in experience/ prioritized experience replay), **R** is the discounted sum of 
+rewards over the next **n** states (hence the name n-step), and **st+n** is the nth state following **st**.
 
 
 #### Distributional DQN

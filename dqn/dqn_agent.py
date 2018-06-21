@@ -20,8 +20,11 @@ class DQN_Agent:
     Implementation of a Double DQN agent. Approximates the Q function
     mapping (state, action) pairs to values to learn to play sonic.
     
-    Depending on the selected models, this agent can also act as a
-    Dueling Double DQN.
+    Depending on the selected models, this agent can also implement
+    the following extensions to the basic Double DQN:
+        - Dueling Double DQN
+        - Noisy DQN
+        - n-step DQN
     """
     def __init__(self, input_size, action_size):
         """
@@ -66,6 +69,9 @@ class DQN_Agent:
         # Memory for experience replay
         self.memory = deque(maxlen=50000)
         
+        # Number of future states used to form memories in n-step dqn 
+        self.n_step = 3
+
         # Main model used to predict q-values.
         self.main_model = None 
 

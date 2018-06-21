@@ -20,8 +20,12 @@ class DQN_PER_Agent:
     PER has been shown to decrease training time significantly (by a factor of 2)
     in many ALE environments.
 
-    Depending on the selected models, this agent can also act as a
-    Dueling Double DQN with PER.
+    Depending on the selected models, this agent can also implement
+    the following extensions:
+        - Dueling DQN
+        - Noisy DQN
+        - n-step DQN
+        
     """
     def __init__(self, input_size, action_size):
         """
