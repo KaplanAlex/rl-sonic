@@ -34,13 +34,13 @@ class DQN_Agent:
         self.action_size = action_size
 
         # Learning Parameters
-        self.gamma = 0.99
+        self.gamma = 0.95
         self.main_lr = 0.0001
         self.target_lr = 0.0001
         
         # Intial observation timesteps - epsilon is not changed and 
         # training does not occur during initial observation. 
-        self.observation_timesteps = 3000
+        self.observation_timesteps = 5000
 
         # Exploration rate.
         self.epsilon = 1.0
@@ -50,10 +50,13 @@ class DQN_Agent:
         # Timesteps between initial and final epsilon following 
         # initial observation phase
         self.exploration_timesteps = 4000000
-
         self.frame_per_action = 4
-        self.update_target_freq = 8192 
+        self.update_target_freq = 10000 
         
+        # Boolean flag signifying that randomness is built into the 
+        # model network
+        self.noisy = False
+
         # Number of timesteps between training intervals.
         self.timestep_per_train = 2000 
         
@@ -91,7 +94,8 @@ class DQN_Agent:
               represented by act_idx.
         """
 
-        if np.random.rand() <= self.epsilon:
+        # Act randomly if NoisyNet is not applied.
+        if (np.random.rand() <= self.epsilon) and (not self.noisy):
             action_idx = random.randrange(self.action_size)
         else:
             # Predict the value associated with each action given the 
@@ -230,8 +234,8 @@ class DQN_Agent:
         main_model    <-  "dqn_main.h5"
         target_model  <-  "dqn_target.h5"
         """
-        self.main_model = load_model("dqn_main.h5")
-        self.target_model = load_model("dqn_target.h5")
+        self.main_model = load_model("dueling_dqn_main.h5")
+        self.target_model = load_model("dueling_dqn_target.h5")
         print("Models Loaded")
 
     def save_models(self):
@@ -242,7 +246,7 @@ class DQN_Agent:
         
         Useful for pausing and restarting training.
         """
-        self.main_model.save("dqn_main.h5")
-        self.target_model.save("dqn_target.h5")
+        self.main_model.save("dueling_dqn_main.h5")
+        self.target_model.save("dueling_dqn_target.h5")
 
         print("Models saved")

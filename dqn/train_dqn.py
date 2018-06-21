@@ -7,7 +7,7 @@ from skimage.viewer import ImageViewer
 from dqn_agent import DQN_Agent
 from dqn_PER_agent import DQN_PER_Agent
 from networks import Networks
-from parameters import EPISODES, LOAD_MODELS, EPSILON, START, MIDDLE, FINAL, PER_AGENT, DUELING
+from parameters import EPISODES, LOAD_MODELS, EPSILON, START, MIDDLE, FINAL, PER_AGENT, DUELING, NOISY
 from util import preprocess_obs
 
 def main():
@@ -23,8 +23,13 @@ def main():
     # Inputs to the agent's prediction network will have the following shape.
     input_size = (img_rows, img_cols, img_stack)
     
+    # File paths
+    stat_path = '../statistics/dqn'
+
     # Priortized Experience Replay.
     if (PER_AGENT):
+        print('PER agent')
+        stat_path += '_PER'
         dqn_agent = DQN_PER_Agent(input_size, action_size)
     else:
         dqn_agent = DQN_Agent(input_size, action_size)
@@ -33,13 +38,28 @@ def main():
     if (LOAD_MODELS):
         dqn_agent.load_models()
     else:
-        # Use the dueling network.
-        if (DUELING):
+        # Use the Noisy Dueling Network.
+        if (NOISY):
+            stat_path += '_Noisy_Dueling'
+            print('NOISY Dueling agent')
+            dqn_agent.main_model = Networks.noisy_dueling_dqn(input_size, action_size, dqn_agent.main_lr)
+            dqn_agent.target_model = Networks.noisy_dueling_dqn(input_size, action_size, dqn_agent.target_lr)
+            dqn_agent.noisy = True
+        # Use the normal dueling network.
+        elif (DUELING):
+            stat_path += '_Dueling'
+            print('Dueling agent')
             dqn_agent.main_model = Networks.dueling_dqn(input_size, action_size, dqn_agent.main_lr)
             dqn_agent.target_model = Networks.dueling_dqn(input_size, action_size, dqn_agent.target_lr)
+        # Normal DQN.
         else:
             dqn_agent.main_model = Networks.dqn(input_size, action_size, dqn_agent.main_lr)
             dqn_agent.target_model = Networks.dqn(input_size, action_size, dqn_agent.target_lr)
+    
+    stat_path += '_stats.csv'
+
+    # TODO Temporary
+    stat_path = 'dueling_stats.csv'
     
     if (EPSILON == START):
         dqn_agent.epsilon = dqn_agent.initial_epsilon
@@ -80,11 +100,7 @@ def main():
                 obs, reward, done, info = env.step(action)
                 # env.render()
 
-                # Clip rewards.
-                if reward > 5:
-                    reward = 5
-
-
+                
                 # Track various events
                 timestep += 1
                 total_timestep += 1
@@ -124,9 +140,9 @@ def main():
 
                 # print(info)
                 print("Epsisode:", episode, " Timestep:", timestep, " Action:", act_idx, " Episode Reward Sum:", reward_sum, " Epsilon:", dqn_agent.epsilon)
-                
+        
         # Save mean episode reward at the end of the episode - append to stats file            
-        with open("../statistics/dqn_stats.csv", "a") as stats_fd:
+        with open(stat_path, "a") as stats_fd:
             reward_str = "Epsiode Cummulative Reward: " + str(reward_sum) + ", Episode Timestpes: " +  str(timestep) + ",\n"
             stats_fd.write(str(reward_str))
             

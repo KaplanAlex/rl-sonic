@@ -34,13 +34,13 @@ class DQN_PER_Agent:
         self.action_size = action_size
 
         # Learning Parameters
-        self.gamma = 0.99
+        self.gamma = 0.95
         self.main_lr = 0.0001
         self.target_lr = 0.0001
         
         # Intial observation timesteps - epsilon is not changed and 
         # training does not occur during initial observation. 
-        self.observation_timesteps = 3000
+        self.observation_timesteps = 10000
 
         # Exploration rate.
         self.epsilon = 1.0
@@ -50,9 +50,12 @@ class DQN_PER_Agent:
         # Timesteps between initial and final epsilon following 
         # initial observation phase
         self.exploration_timesteps = 4000000
-
         self.frame_per_action = 4
-        self.update_target_freq = 8192 
+        self.update_target_freq = 10000
+
+        # Boolean flag signifying that randomness is built into the 
+        # model network
+        self.noisy = False
         
         # Number of timesteps between training intervals.
         self.timestep_per_train = 2000 
@@ -60,8 +63,9 @@ class DQN_PER_Agent:
         # Number of experiences used simultaneously in training.
         self.batch_size = 64
         
-        # Memory for experience replay
-        self.memory = PriorityMemory(50000)
+        # Memory for experience replay.
+        self.memory_len = 5000
+        self.memory = PriorityMemory(self.memory_len)
         
         # Main model used to predict q-values.
         self.main_model = None 
@@ -91,7 +95,8 @@ class DQN_PER_Agent:
               represented by act_idx.
         """
 
-        if np.random.rand() <= self.epsilon:
+        # Act randomly if NoisyNet is not applied.
+        if (np.random.rand() <= self.epsilon) and (not self.noisy):
             action_idx = random.randrange(self.action_size)
         else:
             # Predict the value associated with each action given the 
