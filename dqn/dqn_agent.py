@@ -48,7 +48,7 @@ class DQN_Agent:
         # Exploration rate.
         self.epsilon = 1.0
         self.initial_epsilon = 1.0
-        self.final_epsilon = 0.0001
+        self.final_epsilon = 0.01
         
         # Timesteps between initial and final epsilon following 
         # initial observation phase
@@ -233,26 +233,28 @@ class DQN_Agent:
 
         return action_switch
 
-    def load_models(self):
+    def load_models(self, main_path, target_path):
         """
-        Set the working models to models saved in the following
-        locations:
-        main_model    <-  "dqn_main.h5"
-        target_model  <-  "dqn_target.h5"
+        Set the working models to models saved in the input
+        locations.
+        
+        Arguments:
+            - main_path: Path to the saved main model.
+            - target_path: Path to the saved target model.
         """
-        self.main_model = load_model("dueling_dqn_main.h5")
-        self.target_model = load_model("dueling_dqn_target.h5")
+        self.main_model = load_model(main_path)
+        self.target_model = load_model(target_path)
         print("Models Loaded")
 
-    def save_models(self):
+    def save_models(self, main_path, target_path):
         """
-        Save the current models to the following locations:
-        main_model    ->  "dqn_main.h5"
-        target_model  ->  "dqn_target.h5"
+        Save the current models to the input locations.
         
-        Useful for pausing and restarting training.
+        Arguments:
+            - main_path: Storage location for main model.
+            - target_path: Storage location for target model.
         """
-        self.main_model.save("dueling_dqn_main.h5")
-        self.target_model.save("dueling_dqn_target.h5")
+        self.main_model.save(main_path)
+        self.target_model.save(target_path)
 
         print("Models saved")

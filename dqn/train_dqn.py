@@ -31,42 +31,48 @@ def main():
     
     # File paths
     stat_path = '../statistics/dqn'
+    model_path = '../models/dqn'
 
     # Priortized Experience Replay.
     if (PER_AGENT):
         print('PER agent')
         stat_path += '_PER'
+        model_path+= '_PER'
         dqn_agent = DQN_PER_Agent(input_size, action_size)
     else:
         dqn_agent = DQN_Agent(input_size, action_size)
 
-    # Load previous models, or instantiate new networks.
-    if (LOAD_MODELS):
-        dqn_agent.load_models()
+    
+    # Use the Noisy Dueling Network.
+    if (NOISY):
+        stat_path += '_noisy_dueling'
+        model_path += '_noisy_dueling'
+        print('NOISY Dueling agent')
+        dqn_agent.main_model = Networks.noisy_dueling_dqn(input_size, action_size, dqn_agent.main_lr)
+        dqn_agent.target_model = Networks.noisy_dueling_dqn(input_size, action_size, dqn_agent.target_lr)
+        dqn_agent.noisy = True
+    # Use the normal dueling network.
+    elif (DUELING):
+        stat_path += '_dueling'
+        model_path += '_dueling'
+        print('Dueling agent')
+        dqn_agent.main_model = Networks.dueling_dqn(input_size, action_size, dqn_agent.main_lr)
+        dqn_agent.target_model = Networks.dueling_dqn(input_size, action_size, dqn_agent.target_lr)
+    # Normal DQN.
     else:
-        # Use the Noisy Dueling Network.
-        if (NOISY):
-            stat_path += '_Noisy_Dueling'
-            print('NOISY Dueling agent')
-            dqn_agent.main_model = Networks.noisy_dueling_dqn(input_size, action_size, dqn_agent.main_lr)
-            dqn_agent.target_model = Networks.noisy_dueling_dqn(input_size, action_size, dqn_agent.target_lr)
-            dqn_agent.noisy = True
-        # Use the normal dueling network.
-        elif (DUELING):
-            stat_path += '_Dueling'
-            print('Dueling agent')
-            dqn_agent.main_model = Networks.dueling_dqn(input_size, action_size, dqn_agent.main_lr)
-            dqn_agent.target_model = Networks.dueling_dqn(input_size, action_size, dqn_agent.target_lr)
-        # Normal DQN.
-        else:
-            dqn_agent.main_model = Networks.dqn(input_size, action_size, dqn_agent.main_lr)
-            dqn_agent.target_model = Networks.dqn(input_size, action_size, dqn_agent.target_lr)
+        dqn_agent.main_model = Networks.dqn(input_size, action_size, dqn_agent.main_lr)
+        dqn_agent.target_model = Networks.dqn(input_size, action_size, dqn_agent.target_lr)
     
+    # Append correct suffix and filetype to paths.
     stat_path += '_stats.csv'
+    main_model_path = model_path + '_main.h5'
+    target_model_path = model_path + '_target.h5'
 
-    # TODO Temporary
-    stat_path = 'dueling_stats.csv'
-    
+    # Load previous models.
+    if (LOAD_MODELS):
+        dqn_agent.load_models(main_model_path, target_model_path)
+
+    # Modify statrting epsilon value
     if (EPSILON == START):
         dqn_agent.epsilon = dqn_agent.initial_epsilon
     elif (EPSILON == MIDDLE):
@@ -136,7 +142,7 @@ def main():
                     # Train the agent on saved experiences.
                     if ((total_timestep % dqn_agent.timestep_per_train) == 0):
                             dqn_agent.replay_update()
-                            dqn_agent.save_models()
+                            dqn_agent.save_models(main_model_path, target_model_path)
                         
                     if (dqn_agent.epsilon > dqn_agent.final_epsilon):
                         # Decrease epsilon by a fraction of the range such that epsilon decreases

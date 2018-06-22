@@ -49,7 +49,7 @@ class DQN_PER_Agent:
         # Exploration rate.
         self.epsilon = 1.0
         self.initial_epsilon = 1.0
-        self.final_epsilon = 0.0001
+        self.final_epsilon = 0.01
         
         # Timesteps between initial and final epsilon following 
         # initial observation phase

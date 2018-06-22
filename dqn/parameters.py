@@ -6,7 +6,7 @@ Constants
 EPISODES = 1000
 
 # Load previous models or instantiate new networks
-LOAD_MODELS = False
+LOAD_MODELS = True
 
 # Use Prioritized Experience Replay.
 PER_AGENT = False
@@ -21,4 +21,4 @@ NOISY = False
 START = 0
 MIDDLE = 1
 FINAL = 2
-EPSILON = START
+EPSILON = FINAL
