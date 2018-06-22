@@ -40,6 +40,9 @@ The Rainbow DQN is a collection of discrete extensions to the basic DQN model .
 
 #### Dueling DQN
 
+Victory after 1000 Episodes of training
+https://www.youtube.com/my_videos?o=U
+
 #### Prioritized Experience Replay (PER)
 
 #### Noisy DQN

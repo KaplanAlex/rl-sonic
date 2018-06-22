@@ -162,7 +162,7 @@ class Networks(object):
         # Deepmind paper suggests an implemntation of gaussian noise with standard
         # deviation = 1 / sqrt(# of inputs). GaussianDropout applies multiplicative noise
         # to weighted "action_value" 
-        noise_weights = Dense(action_size activation='linear')(action_value)
+        noise_weights = Dense(action_size, activation='linear')(action_value)
         noise = GaussianDropout(1 / math.sqrt(action_size))(noise_weights)
 
         # Sum action value with the noisy, weighted version of action value to allow
