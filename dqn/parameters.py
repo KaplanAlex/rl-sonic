@@ -3,16 +3,16 @@ Constants
 """
 
 # Number of training episodes
-EPISODES = 1000
+EPISODES = 1500
 
 # Load previous models or instantiate new networks
-LOAD_MODELS = True
+LOAD_MODELS = False
 
 # Use Prioritized Experience Replay.
-PER_AGENT = False
+PER_AGENT = True
 
 # Use the Dueling network
-DUELING = True
+DUELING = False
 
 # Add noise to the model for learned exploration.
 NOISY = False
@@ -21,4 +21,4 @@ NOISY = False
 START = 0
 MIDDLE = 1
 FINAL = 2
-EPSILON = FINAL
+EPSILON = START

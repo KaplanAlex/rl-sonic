@@ -2,17 +2,23 @@
 import math
 
 from keras import backend as K
-from keras.layers import Input, Conv2D, Dense, Flatten, MaxPooling2D, Add, Lambda, GaussianNoise
+from keras.layers import Input, Conv2D, Dense, Flatten, MaxPooling2D, Add, Lambda, GaussianDropout
 from keras.models import Sequential, Model
 from keras.optimizers import Adam
 
 
 class Networks(object):
     """
-    Collection of networks used in various RL solution  implementations.
+    Collection of networks used in various RL solution implementations.
     Featuring:
-        DQN           -  Deep Q-Network (Also can be used as Double DQN)
-        Dueling DQN   -  DQN with Q(s,a) separated into V(s) and A(s,a)
+        DQN                 -  Deep Q-Network (Also can be used as Double DQN)
+        Dueling DQN         -  DQN with Q(s,a) separated into V(s) and A(s,a)
+        Noisy Dueling DQN   -  Dueling DQN with a Gaussian noise layer following
+                               what was previously the output layer, allowing the
+                               network to learn weights which reward or discourage
+                               exploration.
+                               
+
     """
 
     @staticmethod    
@@ -152,10 +158,18 @@ class Networks(object):
 
         # merge the separate portions of the network to yield Q(s,a)
         action_value = Add()([value_layer, advantage_layer])
-        # Deepmind paper suggests an implemntation of "factorized" gaussian noise with standard
-        # deviation = 1 / sqrt(# of inputs)
-        noise = GaussianNoise(1 / math.sqrt(action_size))(action_value)
-        model = Model(input=input_layer, output=noise)
+       
+        # Deepmind paper suggests an implemntation of gaussian noise with standard
+        # deviation = 1 / sqrt(# of inputs). GaussianDropout applies multiplicative noise
+        # to weighted "action_value" 
+        noise_weights = Dense(action_size activation='linear')(action_value)
+        noise = GaussianDropout(1 / math.sqrt(action_size))(noise_weights)
+
+        # Sum action value with the noisy, weighted version of action value to allow
+        # for the discouragement of noise (exploration) overtime.
+        noisy_action_value = Add()([action_value, noise])
+
+        model = Model(input=input_layer, output=noisy_action_value)
         
         adam = Adam(lr=learning_rate)
         model.compile(loss='mse',optimizer=adam)

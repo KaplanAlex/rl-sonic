@@ -165,13 +165,15 @@ class DQN_PER_Agent:
             - error: The difference between the previous and updated q value 
               for the changed action for each sampled experience.
         """
+        batch_size = len(mini_batch)
+
         # Batch size experiences - (batch_size, img_rows, img_cols, 4)
-        update_input = np.zeros(((self.batch_size,) + self.input_size)) 
-        update_target = np.zeros(((self.batch_size,) + self.input_size)) 
+        update_input = np.zeros(((batch_size,) + self.input_size)) 
+        update_target = np.zeros(((batch_size,) + self.input_size)) 
         action, reward, done = [], [], []
 
         # Extract information from the sampled memories.
-        for i in range(self.batch_size):
+        for i in range(batch_size):
             # Append each state (1, 128, 128, 4) to update_input
             update_input[i,:,:,:] = mini_batch[i][0]
             action.append(mini_batch[i][1])
@@ -188,7 +190,7 @@ class DQN_PER_Agent:
         target_pred = self.target_model.predict(update_target)
 
         error = []
-        for sample_idx in range(self.batch_size):
+        for sample_idx in range(batch_size):
             # Q-value prior to update
             prev_q = next_state_pred[sample_idx][action[sample_idx]]
 
@@ -278,26 +280,28 @@ class DQN_PER_Agent:
 
         return action_switch
 
-    def load_models(self):
+    def load_models(self, main_path, target_path):
         """
-        Set the working models to models saved in the following
-        locations:
-        main_model    <-  "dqn_main.h5"
-        target_model  <-  "dqn_target.h5"
+        Set the working models to models saved in the input
+        locations.
+        
+        Arguments:
+            - main_path: Path to the saved main model.
+            - target_path: Path to the saved target model.
         """
-        self.main_model = load_model("dqn_main.h5")
-        self.target_model = load_model("dqn_target.h5")
+        self.main_model = load_model(main_path)
+        self.target_model = load_model(target_path)
         print("Models Loaded")
 
-    def save_models(self):
+    def save_models(self, main_path, target_path):
         """
-        Save the current models to the following locations:
-        main_model    ->  "dqn_main.h5"
-        target_model  ->  "dqn_target.h5"
+        Save the current models to the input locations.
         
-        Useful for pausing and restarting training.
+        Arguments:
+            - main_path: Storage location for main model.
+            - target_path: Storage location for target model.
         """
-        self.main_model.save("dqn_main.h5")
-        self.target_model.save("dqn_target.h5")
+        self.main_model.save(main_path)
+        self.target_model.save(target_path)
 
         print("Models saved")

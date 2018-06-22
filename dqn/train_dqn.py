@@ -110,7 +110,7 @@ def main():
                 # network here as it represents a batch size of 1.
                 act_idx, action = dqn_agent.act(exp_stack)
                 obs, reward, done, info = env.step(action)
-                # env.render()
+                #env.render()
 
                 
                 # Track various events

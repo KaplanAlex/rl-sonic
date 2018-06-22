@@ -159,9 +159,9 @@ def main():
                     original_state, original_act, _ = prev_n_exp[-1]
                     nth_state, _, nth_done = prev_n_exp[0]
 
-                # Save the nth previous state and predicted action the discounted sum of rewards
-                # and final state over the next n steps.
-                dqn_agent.save_memory(original_state, original_act, reward_sum, nth_state, nth_done)
+                    # Save the nth previous state and predicted action the discounted sum of rewards
+                    # and final state over the next n steps.
+                    dqn_agent.save_memory(original_state, original_act, reward_sum, nth_state, nth_done)
                 
                 # In the observation phase skip training updates and decrmenting epsilon.
                 if (total_timestep >= dqn_agent.observation_timesteps):
