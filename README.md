@@ -7,6 +7,11 @@ Reinforcement Learning methods to play Sonic.
 Agent's behavior at the beginning of training. Moves are selected randomly as the
 agent explores its environment.
 
+## Training End
+
+
+After playing 1000 games, the agent is able to win the level with easy.  
+
 ## Implementation
 I designed and trained the following models to play Sonic. The agent made decisions
 solely through the observation of the pixel values in each frame of the game over time.
@@ -16,32 +21,36 @@ environement, taking an action, and learning from the resulting reward, until ul
 reaching a policy which dictates the optimal action to take in evey situation.
 
 ### Deep Q-Network (DQN)
-Deep Q-Networks (abbreviated as DQNs) approximate the function, **Q(s,a)**, which maps 
-(state, action) pairs to the expected value of taking the action **a** in state **s**
+Deep Q-Networks (abbreviated as DQNs) approximate the function, **Q(s,a)**, which 
+arepresents "how good" it is to take action **a** in state **s**. In Q learning, the metric 
+used to evaluate action **a** is the expected sum of discounted future rewards acting 
+optimally from state **s**. 
+
 As an agent explores its environment, taking actions and observing the resulting reward, 
-the observed rewards are used to update the value associated with the observed state
-and selected action. Thus, overtime (given sufficient exploration - the agent must
-explore potential actions in each state to determine their value), the q values converges 
-to an approximation of the *optimal* of the function which maps state action pairs to the
-*optimal* action.
+experiences (initial state, selected action, reward, next state) are used to update the 
+value associated with the initial state and selected action. Provided sufficient exploration,
+the q values converge to an approximation of the *optimal* function mapping state action pairs 
+to the *optimal* action overtime.
 
 
-The following models are extensions are the basic DQN model. The combination
-of all discrete extentions into one agent forms a "Rainbow DQN". While each extension
-generally (and in many cases substantially) improves the training efficiency and accuracy
-of the agent, the Rainbow DQN has been shown to outperform all subcombinations of
-the following DQN additions. 
+At their most basic, Q-networks simply iteratively update their approximation of the 
+Q-function as each experience occurs. Standard DQNs have proven to be very strong
+solutions to many difficult reinforcement. However, the basic DQN can be improved
+dramatically through various methods which improve convergence reliability and speed. 
 
-
-##### Rainbow DQN
-The Rainbow DQN is a collection of discrete extensions to the basic DQN model . 
+The following models are discrete extensions of the basic DQN model. The combination
+of all extentions forms a "Rainbow DQN", as title by Google's Deepmind. While each extension
+generally improves the training efficiency and accuracy of the agent, the Rainbow DQN has 
+been shown to outperform all subcombinations of the following DQN additions in many Arcade
+Learning Environments. 
 
 #### Double DQN
 
 #### Dueling DQN
 
 Victory after 1000 Episodes of training
-https://www.youtube.com/my_videos?o=U
+
+https://www.youtube.com/watch?v=BO5VcUd2RGQ
 
 #### Prioritized Experience Replay (PER)
 
@@ -55,6 +64,8 @@ rewards over the next **n** states (hence the name n-step), and **st+n** is the 
 
 
 #### Distributional DQN
+
+##### Rainbow DQN
 
 #### Resources
 [Rainbow DQN arvix paper](https://arxiv.org/abs/1710.02298)
