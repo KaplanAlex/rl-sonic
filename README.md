@@ -58,6 +58,7 @@ Dueling DQNs attempt to gain a deeper understanding of the environment by breaki
 
 
 Dueling DQNs learn V(s) and A(s,a) within inner layers, then sum the output of the two layers to yield the q values: 
+
 V(s) + A(s,a) = Q(s,a).
  
 
