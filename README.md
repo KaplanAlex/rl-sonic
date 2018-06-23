@@ -57,7 +57,8 @@ This agent can be found in [dqn_agent.py]() and trained with [train.py](). Ensur
 Dueling DQNs attempt to gain a deeper understanding of the environment by breaking down the q function **Q(s,a)** which represents the value of taking action **a** in state **s** into two separate functions: **V(s)** - the value of being in state s and **A(s,a)** - the advantage of taking action **a** over taking all other possible actions. Intuitively, the dueling architecture can now separate the value of simply existing in a state V(s) from the value associated with acting in the state A(s,a).
 
 
-Dueling DQNs learn V(s) and A(s,a) within inner layers, then sum the output of the two layers to yield the q values: V(s) + A(s,a) = Q(s,a).
+Dueling DQNs learn V(s) and A(s,a) within inner layers, then sum the output of the two layers to yield the q values: 
+V(s) + A(s,a) = Q(s,a).
  
 
 Remarkably, this structure provides the agent with a much better understanding of the environment than a basic Double DQN, as the dueling agent was able to learn to complete the level within 1000 episodes of training, while the Double DQN was not.
