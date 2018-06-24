@@ -8,7 +8,7 @@ Agent's behavior at the beginning of training. Moves are selected randomly as th
 agent explores its environment.
 
 ## Training End
-![Training End GIF](https://i.imgur.com/5OIGxnl.gifv)
+![Training End GIF](https://i.imgur.com/5OIGxnl.gif)
 
 After playing 1000 games, the agent is able to win the level with ease. The agent in this
 gif is supported by a Dueling Double DQN. The full runthrough is available on YouTube at:
