@@ -99,6 +99,10 @@ def main():
         # (1, img_rows, img_cols, img_stack).
         exp_stack = np.expand_dims(exp_stack, axis=0) # 1x64x64x4
         
+        # Punish the agent for not moving forward
+        prev_state = {}
+        steps_stuck = 0
+
         # Continue until the end of the zone is reached or 4500 timesteps have 
         # passed.
         while not done:
@@ -110,14 +114,24 @@ def main():
                 # network here as it represents a batch size of 1.
                 act_idx, action = dqn_agent.act(exp_stack)
                 obs, reward, done, info = env.step(action)
-                #env.render()
+                # env.render()
+                
+                # Punish the agent for standing still for too long.
+                if (prev_state == info):
+                    steps_stuck += 1
+                else:
+                    steps_stuck = 0
+                prev_state = info
 
+                # Position based reward does not include stagnation punishment.
+                reward_sum += reward      
+                if (steps_stuck > 20):
+                    reward -= 1
                 
                 # Track various events
                 timestep += 1
                 total_timestep += 1
 
-                reward_sum += reward                
                 obs = preprocess_obs(obs, size=(img_rows, img_cols))
                 
                 # Create a 1st dimension for stacking experiences and a 4th for 

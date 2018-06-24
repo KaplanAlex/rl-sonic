@@ -8,10 +8,12 @@ Agent's behavior at the beginning of training. Moves are selected randomly as th
 agent explores its environment.
 
 ## Training End
+![Training End GIF](https://i.imgur.com/5OIGxnl.gifv)
 
+After playing 1000 games, the agent is able to win the level with ease. The agent in this
+gif is supported by a Dueling Double DQN. The full runthrough is available on YouTube at:
 
-After playing 1000 games, the agent is able to win the level with ease.  
-
+https://www.youtube.com/watch?v=BO5VcUd2RGQ
 ## Implementation
 I designed and trained the following models to play Sonic. The agent made decisions
 solely through the observation of the pixel values in each frame of the game over time.
@@ -21,11 +23,11 @@ environement, taking an action, and learning from the resulting reward, until ul
 reaching a policy which dictates the optimal action to take in evey situation.
 
 ### Deep Q-Network (DQN)
-Deeep Q-Networks (DQNs) approximate the function **Q(s,a)**, which represents the value of taking 
+Deep Q-Networks (DQNs) approximate the function **Q(s,a)**, which represents the value of taking 
 action **a** in state **s**. In Q learning, the metric used to evaluate an action **a** is the 
 expected sum of discounted future rewards acting optimally from state **s**. This idea is formalized by the *Bellman Equation*:
 
-Q(s,a) = r + y(max(Q(s’, a’))
+**Q(s,a) = r + y(max(Q(s’, a’))**
 
 Where **r** is the reward observed after taking action **a** in state **s** and **y** is a discount factor.
 
@@ -57,7 +59,7 @@ This agent can be found in [dqn_agent.py]() and trained with [train.py](). Ensur
 Dueling DQNs attempt to gain a deeper understanding of the environment by breaking down the q function **Q(s,a)** which represents the value of taking action **a** in state **s** into two separate functions: **V(s)** - the value of being in state s and **A(s,a)** - the advantage of taking action **a** over taking all other possible actions. Intuitively, the dueling architecture can now separate the value of simply existing in a state V(s) from the value associated with acting in the state A(s,a).
 
 
-Dueling DQNs learn V(s) and A(s,a) within inner layers, then sum the output of the two layers to yield the q values: 
+Dueling DQNs learn V(s) and A(s,a) within inner layers, then sum the output of the two layers to yield the q values based on the relation: 
 
 V(s) + A(s,a) = Q(s,a).
  
@@ -97,7 +99,7 @@ The Distributional DQN attempts to learn a distribution of future rewards associ
 
 Fortunately, the Bellman equation still holds true for distributions (called the Distributional Bellman) and thus Distributional DQNs can be iteratively updated in the same was as q value based DQNs.
 
-##### Rainbow DQN
+#### Rainbow DQN
 
 #### Resources
 [Rainbow DQN arvix paper](https://arxiv.org/abs/1710.02298)

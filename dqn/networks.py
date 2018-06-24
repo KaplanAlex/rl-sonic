@@ -97,7 +97,7 @@ class Networks(object):
 
         # Value - V(s)
         value_layer = Dense(256, activation='relu')(conv_out)
-        value_layer = Dense(1, init='uniform')(value_layer)
+        value_layer = Dense(1, kernel_initializer='uniform')(value_layer)
         value_layer = Lambda(lambda s: K.expand_dims(s[:, 0], axis=-1), output_shape=(action_size,))(value_layer)
 
         # Advantage tower - A
@@ -148,7 +148,7 @@ class Networks(object):
 
         # Value - V(s)
         value_layer = Dense(256, activation='relu')(conv_out)
-        value_layer = Dense(1, init='uniform')(value_layer)
+        value_layer = Dense(1, kernel_initializer='uniform')(value_layer)
         value_layer = Lambda(lambda s: K.expand_dims(s[:, 0], axis=-1), output_shape=(action_size,))(value_layer)
 
         # Advantage tower - A

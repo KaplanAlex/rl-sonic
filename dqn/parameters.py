@@ -9,13 +9,13 @@ EPISODES = 1500
 LOAD_MODELS = False
 
 # Use Prioritized Experience Replay.
-PER_AGENT = True
+PER_AGENT = False
 
 # Use the Dueling network
-DUELING = False
+DUELING = True
 
 # Add noise to the model for learned exploration.
-NOISY = False
+NOISY = True
 
 # Initialize epsilon to initial epsilon, final epsilon, or in between.
 START = 0
