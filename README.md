@@ -11,9 +11,8 @@ agent explores its environment.
 ![Training End GIF](https://i.imgur.com/iN9KqpS.gif)
 
 After playing 1000 games, the agent is able to win the level with ease. The agent in this
-gif is supported by a Dueling Double DQN. The full runthrough is available on YouTube at:
+gif is supported by a Dueling Double DQN. The full runthrough can be found on YouTube at: https://www.youtube.com/watch?v=BO5VcUd2RGQ
 
-https://www.youtube.com/watch?v=BO5VcUd2RGQ
 ## Implementation
 I designed and trained the following models to play Sonic. The agent made decisions
 solely through the observation of the pixel values in each frame of the game over time.

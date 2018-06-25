@@ -175,3 +175,151 @@ class Networks(object):
         model.compile(loss='mse',optimizer=adam)
 
         return model
+
+
+    @staticmethod    
+    def C51(input_shape, action_size, learning_rate):
+        """
+        DQN which outputs a value distribution with 51 support values
+        for each action.
+
+        Distributional Q-learning has been proven to significantly outperform 
+        standard q-learning. Additionally, learning a distribution creates
+        many opportunities for more powerful models which recognize and
+        correctly react to multi-modal distributions.   
+        """
+
+        # Outline the network with the Keras functional API to specify the connection
+        # of certain outputs to specific layers.
+        input_layer = Input(shape=(input_shape))
+        # Use the same convolutional layer outline (windows, strides, and pooling) as dqn.
+        conv1 = Conv2D(32, kernel_size=(6, 6), strides=(1, 1),  activation='relu')(input_layer)
+        pool1 = MaxPooling2D(pool_size=(2, 2), strides=(2, 2))(conv1)
+        conv2 = Conv2D(64, kernel_size=(5, 5), strides=(1, 1), activation='relu')(pool1)
+        pool2 = MaxPooling2D(pool_size=(2, 2), strides=(2, 2))(conv2)
+        conv3 = Conv2D(64, kernel_size=(3, 3), strides=(1, 1), activation='relu')(pool2)
+        conv_out = Flatten()(conv3)
+
+        # Reduce the flattened conv_out to 1024 outputs.
+        reduce = Dense(1024, activation='relu')(conv_out)
+
+        # Each action has a distribution with 51 distinct values
+        action_distributions = []
+        for _ in range(action_size):
+            # 51 node output wiht Softmax activation to yield probabiltiies
+            action_distributions.append(Dense(51, activation='softmax')(reduce))
+
+        model = Model(inputs=input_layer, outputs=action_distributions)
+        adam = Adam(lr=learning_rate)
+        # Categorical cross entropy loss to compare distributions
+        model.compile(loss='categorical_crossentropy',optimizer=adam)
+
+
+    @staticmethod    
+    def dueling_C51(input_shape, action_size, learning_rate):
+        """
+        Dueling Distributional DQN network structure.
+
+        see "dueling_dqn" and "C51"
+        """
+        # Outline the network with the Keras functional API to specify the connection
+        # of certain outputs to specific layers.
+        input_layer = Input(shape=(input_shape))
+
+        # Use the same convolutional layer outline (windows, strides, and pooling) as dqn.
+        conv1 = Conv2D(32, kernel_size=(6, 6), strides=(1, 1),  activation='relu')(input_layer)
+        pool1 = MaxPooling2D(pool_size=(2, 2), strides=(2, 2))(conv1)
+        conv2 = Conv2D(64, kernel_size=(5, 5), strides=(1, 1), activation='relu')(pool1)
+        pool2 = MaxPooling2D(pool_size=(2, 2), strides=(2, 2))(conv2)
+        conv3 = Conv2D(64, kernel_size=(3, 3), strides=(1, 1), activation='relu')(pool2)
+        conv_out = Flatten()(conv3)
+
+        # Value - V(s)
+        value_layer = Dense(256, activation='relu')(conv_out)
+        value_layer = Dense(1, kernel_initializer='uniform')(value_layer)
+        value_layer = Lambda(lambda s: K.expand_dims(s[:, 0], axis=-1), output_shape=(action_size,))(value_layer)
+
+        # Advantage tower - A
+        advantage_layer = Dense(256, activation='relu')(conv_out)
+        advantage_layer = Dense(action_size)(advantage_layer)
+        advantage_layer = Lambda(lambda a: a[:, :] - K.mean(a[:, :], keepdims=True), output_shape=(action_size,))(advantage_layer)
+
+        # merge the separate portions of the network to yield Q(s,a)
+        action_value = Add()([value_layer, advantage_layer])
+        
+        # Each action has a distribution with 51 distinct values
+        action_distributions = []
+        for _ in range(action_size):
+            # 51 node output wiht Softmax activation to yield probabiltiies
+            action_distributions.append(Dense(51, activation='softmax')(action_value))
+
+        model = Model(inputs=input_layer, outputs=action_distributions)
+        adam = Adam(lr=learning_rate)
+        # Categorical cross entropy loss to compare distributions
+        model.compile(loss='categorical_crossentropy', optimizer=adam)
+
+        return model
+
+
+
+    @staticmethod    
+    def rainbow_dqn(input_shape, action_size, learning_rate):
+        """
+        This model possesses all of the required attributes to implement a "rainbow" DQN.
+        The "rainbow" DQN includes:
+            - Double DQN
+            - Dueling Architecture
+            - NoisyNets
+            - Prioritized Experience Replay
+            - Multi (n) step Learning
+            - Distributional Learning (C51)
+
+        This network outlines the structure for a Dueling, Noisy, Distributional DQN. Thus,
+        with the correct agent implementation and training process, this network will become
+        a rainbow DQN.
+        """
+        # Outline the network with the Keras functional API to specify the connection
+        # of certain outputs to specific layers.
+        input_layer = Input(shape=(input_shape))
+        # Use the same convolutional layer outline (windows, strides, and pooling) as dqn.
+        conv1 = Conv2D(32, kernel_size=(6, 6), strides=(1, 1),  activation='relu')(input_layer)
+        pool1 = MaxPooling2D(pool_size=(2, 2), strides=(2, 2))(conv1)
+        conv2 = Conv2D(64, kernel_size=(5, 5), strides=(1, 1), activation='relu')(pool1)
+        pool2 = MaxPooling2D(pool_size=(2, 2), strides=(2, 2))(conv2)
+        conv3 = Conv2D(64, kernel_size=(3, 3), strides=(1, 1), activation='relu')(pool2)
+        conv_out = Flatten()(conv3)
+
+        # Value - V(s)
+        value_layer = Dense(256, activation='relu')(conv_out)
+        value_layer = Dense(1, kernel_initializer='uniform')(value_layer)
+        value_layer = Lambda(lambda s: K.expand_dims(s[:, 0], axis=-1), output_shape=(action_size,))(value_layer)
+
+        # Advantage tower - A
+        advantage_layer = Dense(256, activation='relu')(conv_out)
+        advantage_layer = Dense(action_size)(advantage_layer)
+        advantage_layer = Lambda(lambda a: a[:, :] - K.mean(a[:, :], keepdims=True), output_shape=(action_size,))(advantage_layer)
+
+        # merge the separate portions of the network to yield Q(s,a)
+        action_value = Add()([value_layer, advantage_layer])
+       
+        # Deepmind paper suggests an implemntation of gaussian noise with standard
+        # deviation = 1 / sqrt(# of inputs). GaussianDropout applies multiplicative noise
+        # to weighted "action_value" 
+        noise_weights = Dense(action_size, activation='linear')(action_value)
+        noise = GaussianDropout(1 / math.sqrt(action_size))(noise_weights)
+
+        # Sum action value with the noisy, weighted version of action value to allow
+        # for the discouragement of noise (exploration) overtime.
+        noisy_action_value = Add()([action_value, noise])
+
+        # Each action has a distribution with 51 distinct values
+        action_distributions = []
+        for _ in range(action_size):
+            # 51 node output wiht Softmax activation to yield probabiltiies
+            action_distributions.append(Dense(51, activation='softmax')(noisy_action_value))
+
+        model = Model(inputs=input_layer, outputs=action_distributions)
+        adam = Adam(lr=learning_rate)
+        # Categorical cross entropy loss to compare distributions
+        model.compile(loss='categorical_crossentropy',optimizer=adam)
+        return model

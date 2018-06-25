@@ -12,10 +12,10 @@ LOAD_MODELS = False
 PER_AGENT = False
 
 # Use the Dueling network
-DUELING = True
+DUELING = False
 
 # Add noise to the model for learned exploration.
-NOISY = True
+NOISY = False
 
 # Initialize epsilon to initial epsilon, final epsilon, or in between.
 START = 0

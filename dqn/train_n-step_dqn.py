@@ -122,7 +122,7 @@ def main():
                 # network here as it represents a batch size of 1.
                 act_idx, action = dqn_agent.act(exp_stack)
                 obs, reward, done, info = env.step(action)
-                env.render()
+                # env.render()
                 
                 timestep += 1
                 total_timestep += 1
@@ -147,12 +147,12 @@ def main():
                 # previous experience
                 if (len(prev_n_rewards) >= dqn_agent.n_step):
                     # Compute discounted reward
-                    reward_sum = 0
-                    for idx in range(prev_n_rewards):
-                        reward = prev_n_rewards[idx]
+                    discounted_reward = 0
+                    for idx in range(len(prev_n_rewards)):
+                        prev_reward = prev_n_rewards[idx]
                         # rewards are append left so that the most recent rewards are 
                         # discounted the least.
-                        reward_sum += ((dqn_agent.gamma ** idx) * reward)
+                        discounted_reward += ((dqn_agent.gamma ** idx) * prev_reward)
                     
                     # Experiences are pushed forward into the deque as more are appened. The
                     # nth previous experience is at the last index.
@@ -161,7 +161,7 @@ def main():
 
                     # Save the nth previous state and predicted action the discounted sum of rewards
                     # and final state over the next n steps.
-                    dqn_agent.save_memory(original_state, original_act, reward_sum, nth_state, nth_done)
+                    dqn_agent.save_memory(original_state, original_act, discounted_reward, nth_state, nth_done)
                 
                 # In the observation phase skip training updates and decrmenting epsilon.
                 if (total_timestep >= dqn_agent.observation_timesteps):
