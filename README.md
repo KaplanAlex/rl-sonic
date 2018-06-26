@@ -1,5 +1,5 @@
 # rl-sonic
-Reinforcement Learning methods to play Sonic.
+Implementations of various Reinforcement Learning algorithms used to train an agent to play Sonic.
 
 ## Training Start
 ![Training Start GIF](https://i.imgur.com/GRyEVXc.gif)
@@ -13,13 +13,28 @@ agent explores its environment.
 After playing 1000 games, the agent is able to win the level with ease. The agent in this
 gif is supported by a Dueling Double DQN. The full runthrough can be found on YouTube at: https://www.youtube.com/watch?v=BO5VcUd2RGQ
 
-## Implementation
-I designed and trained the following models to play Sonic. The agent made decisions
-solely through the observation of the pixel values in each frame of the game over time.
-While the following models represent a diverse collection of reinforcment learning
-algorithms, each was trained with the same basic process of iteratively observing the 
-environement, taking an action, and learning from the resulting reward, until ultimately
-reaching a policy which dictates the optimal action to take in evey situation.
+## Project Summary
+I designed and trained the following models to play Sonic: 
+
+- Double DQN
+- Dueling DQN
+- DQN with Prioritized Experience Replay
+- Noisy DQN
+- N-step DQN
+    - Distributional DQN
+
+
+The agent supported by these  models made decisions solely through the observation of the 
+pixel values in an input frame. While the following models represent a diverse collection 
+of reinforcment learning algorithms, each was trained with the same basic process of 
+iteratively observing the  environement, taking an action, and learning from the resulting reward. 
+All models were trained over 1000 Episodes of gameplay, where each episode ended after 
+(i) 4500 timesteps elapsed, (ii) the game was lost, or (iii) all lives were lost.
+
+## Results
+
+## Implementation and Theory
+Explantion of the theory supporting each model I implemented and trained.
 
 ### Deep Q-Network (DQN)
 Deep Q-Networks (DQNs) approximate the function **Q(s,a)**, which represents the value of taking 
