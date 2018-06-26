@@ -11,8 +11,11 @@ LOAD_MODELS = False
 # Use Prioritized Experience Replay.
 PER_AGENT = False
 
+# Distriutional Agent
+DIST_AGENT = True
+
 # Use the Dueling network
-DUELING = False
+DUELING = True
 
 # Add noise to the model for learned exploration.
 NOISY = False

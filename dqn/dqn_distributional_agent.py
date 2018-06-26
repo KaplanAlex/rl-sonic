@@ -12,7 +12,7 @@ import numpy as np
 import random
 
 
-class DQN_Agent:
+class DistributionalDQN:
     """
     Implementation of a Double Distributional DQN. Specifically, the distributional
     DQN is a C51 network, which outputs a distribution with 51 values for each
@@ -124,7 +124,7 @@ class DQN_Agent:
             # Sum the weighted values from each distribution and find the one with 
             # the largest expected value.
             avg_dist_values = np.sum(weighted_dists, axis=1)
-            act_idx = np.argmax(avg_dist_values)
+            action_idx = np.argmax(avg_dist_values)
         
         new_action = self.action_switch[action_idx]
 

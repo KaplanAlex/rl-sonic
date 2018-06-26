@@ -11,9 +11,11 @@ from retro_contest.local import make
 
 from dqn_agent import DQN_Agent
 from dqn_PER_agent import DQN_PER_Agent
+from dqn_distributional_agent import DistributionalDQN
 from networks import Networks
 from parameters import EPISODES, LOAD_MODELS, EPSILON, START, \
-                       MIDDLE, FINAL, PER_AGENT, DUELING, NOISY
+                       MIDDLE, FINAL, PER_AGENT, DUELING, NOISY, \
+                       DIST_AGENT
 from util import preprocess_obs
 
 def main():
@@ -39,6 +41,10 @@ def main():
         stat_path += '_PER'
         model_path+= '_PER'
         dqn_agent = DQN_PER_Agent(input_size, action_size)
+    elif(DIST_AGENT):
+        stat_path += '_DIST'
+        model_path+= '_DIST'
+        dqn_agent = DistributionalDQN(input_size, action_size)
     else:
         dqn_agent = DQN_Agent(input_size, action_size)
 
@@ -52,12 +58,21 @@ def main():
         dqn_agent.target_model = Networks.noisy_dueling_dqn(input_size, action_size, dqn_agent.target_lr)
         dqn_agent.noisy = True
     # Use the normal dueling network.
+    elif(DUELING and DIST_AGENT):
+        stat_path += '_dueling'
+        model_path += '_dueling'
+        print('Dueling distributional')
+        dqn_agent.main_model = Networks.dueling_C51(input_size, action_size, dqn_agent.main_lr)
+        dqn_agent.target_model = Networks.dueling_C51(input_size, action_size, dqn_agent.target_lr)
     elif (DUELING):
         stat_path += '_dueling'
         model_path += '_dueling'
         print('Dueling agent')
         dqn_agent.main_model = Networks.dueling_dqn(input_size, action_size, dqn_agent.main_lr)
         dqn_agent.target_model = Networks.dueling_dqn(input_size, action_size, dqn_agent.target_lr)
+    elif(DIST_AGENT):
+        dqn_agent.main_model = Networks.C51(input_size, action_size, dqn_agent.main_lr)
+        dqn_agent.target_model = Networks.C51(input_size, action_size, dqn_agent.target_lr)
     # Normal DQN.
     else:
         dqn_agent.main_model = Networks.dqn(input_size, action_size, dqn_agent.main_lr)

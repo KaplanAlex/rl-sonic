@@ -214,7 +214,8 @@ class Networks(object):
         # Categorical cross entropy loss to compare distributions
         model.compile(loss='categorical_crossentropy',optimizer=adam)
 
-
+        return model
+        
     @staticmethod    
     def dueling_C51(input_shape, action_size, learning_rate):
         """
