@@ -1,5 +1,5 @@
 # rl-sonic
-Keras implementation of a "Rainbow" DQN used to train an agent to play Sonic.
+Python, Keras implementation of a "Rainbow" DQN used to train an agent to play Sonic.
 
 ## Training Start
 ![Training Start GIF](https://i.imgur.com/GRyEVXc.gif)
@@ -11,7 +11,7 @@ agent explores its environment.
 ![Training End GIF](https://i.imgur.com/iN9KqpS.gif)
 
 After playing 1000 games, the agent is able to win the level with ease. The agent in this
-gif is supported by a Dueling Double DQN. The full runthrough can be found on YouTube at: https://www.youtube.com/watch?v=BO5VcUd2RGQ
+gif is supported by a Dueling Double DQN. The full run-through can be found on YouTube at: https://www.youtube.com/watch?v=BO5VcUd2RGQ
 
 ## Project Summary
 I designed a Deep Q Network (DQN) in Python with Keras backed by Tensorflow, then
@@ -30,10 +30,12 @@ backed by different combinations of these extensions to play a level of *Sonic T
 
 The agents supported by these models made decisions solely through the observation of the 
 pixel values in an input frame. While the following models represent a diverse collection 
-of reinforcment learning algorithms, each was trained with the same basic process of 
-iteratively observing the  environement, taking an action, and learning from the resulting reward. 
-All models were trained over 1000 Episodes of gameplay, where each episode ended after 
-(i) 4500 timesteps elapsed, (ii) the game was lost, or (iii) all lives were lost.
+of DQN improvements, each was trained with the same basic process of  iteratively observing 
+the  environement, taking an action, and learning from the resulting reward. All models were 
+trained over 1000 Episodes of gameplay, where each episode ended after:
+1. 4500 timesteps elapsed.
+2. The agent lost the game.
+3. All lives were lost.
 
 ## Results
 
