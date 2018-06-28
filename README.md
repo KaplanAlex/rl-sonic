@@ -20,7 +20,7 @@ implemented the six extensions included in Google *Deepmind*'s "Rainbow" DQN. Th
 
 - Double DQN
 - Dueling DQN
-- DQN with Prioritized Experience Replay
+- Prioritized Experience Replay
 - Noisy DQN
 - N-step DQN
 - Distributional DQN
@@ -33,16 +33,24 @@ pixel values in an input frame. While the following models represent a diverse c
 of DQN improvements, each was trained with the same basic process of  iteratively observing 
 the  environement, taking an action, and learning from the resulting reward. All models were 
 trained over 1000 Episodes of gameplay, where each episode ended after:
-1. 4500 timesteps elapsed.
+1. 4500 timesteps elapsed (With a timestep taking 1/15th of a second and the observation of 4 frames at 60Hz).
 2. The agent lost the game.
 3. All lives were lost.
 
 ## Results
 
 ## Implementation and Theory
-Explantion of the theory supporting each model I implemented and trained.
+Explantion of the theory supporting the models I implemented and trained.
 
 ### Network Design
+All of the DQNs I created had the same base structure, which included three convolutional layers
+with ReLu activation functions separated by two MaxPooling layers. The final convolutional layer
+was flattened and fed into a series of fully connected (dense) also with ReLu activation functions,
+which terminated in a Dense layer with Linear activation and 8 output nodes (one for each action).
+The Dueling, Noisy, and Distributional extensions required modifying this structure to include
+isolated network paths, weighted noise, and multi-dimensional output respectively. All of these 
+extensions are touched on in the following section and are explained within [Networks](https://github.com/KaplanAlex/rl-sonic/blob/master/dqn/networks.py) file. 
+
 
 ### Deep Q-Network (DQN): Building the Rainbow
 Deep Q-Networks (DQNs) approximate the function **Q(s,a)**, which represents the value of taking 
@@ -122,4 +130,4 @@ The Distributional DQN attempts to learn a distribution of future rewards associ
 Fortunately, the Bellman equation still holds true for distributions (called the Distributional Bellman) and thus Distributional DQNs can be iteratively updated in the same was as q value based DQNs.
 
 #### Resources
-[Rainbow DQN arvix paper](https://arxiv.org/abs/1710.02298)
+- [Rainbow DQN arvix paper](https://arxiv.org/abs/1710.02298)
