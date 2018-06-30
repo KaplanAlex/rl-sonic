@@ -37,7 +37,7 @@ trained over 1000 Episodes of gameplay, where each episode ended after:
 2. The agent lost the game.
 3. All lives were lost.
 
-## Results
+Various combinations of extensions can be trained by running [train_dqn.py](https://github.com/KaplanAlex/rl-sonic/blob/master/dqn/train_dqn.py) or [train_n-step_dqn.py](https://github.com/KaplanAlex/rl-sonic/blob/master/dqn/train_n-step_dqn.py) and setting values in [parameters.py](https://github.com/KaplanAlex/rl-sonic/blob/master/dqn/parameters.py) to reflect the inclusion of the desired improvements. These training scripts implement one of [dqn_agent.py](https://github.com/KaplanAlex/rl-sonic/blob/master/dqn/dqn_agent.py), [dqn_PER_agent.py](https://github.com/KaplanAlex/rl-sonic/blob/master/dqn/dqn_PER_agent.py), and [dqn_distributional_agent.py](https://github.com/KaplanAlex/rl-sonic/blob/master/dqn/dqn_distributional_agent.py) backed by one network from [networks.py](https://github.com/KaplanAlex/rl-sonic/blob/master/dqn/networks.py), as specified in [parameters.py](https://github.com/KaplanAlex/rl-sonic/blob/master/dqn/parameters.py). The complete "Rainbow" agent is located in [rainbow.py](https://github.com/KaplanAlex/rl-sonic/blob/master/dqn/rainbow_agent.py) and can be trained simply by running the script [train_trainbow.py](https://github.com/KaplanAlex/rl-sonic/blob/master/dqn/train_rainbow.py).
 
 ## Implementation and Theory
 Explantion of the theory supporting the models I implemented and trained.
@@ -132,5 +132,17 @@ Fortunately, the Bellman equation still holds true for distributions (called the
 
 [dqn_distributional_agent.py](https://github.com/KaplanAlex/rl-sonic/blob/master/dqn/dqn_distributional_agent.py) includes the modifications necessary to train and act from a set of distributions rather than discrete values.
 
-#### Resources
+## Resources
+### OpenAi Retro Contest
+[Contest](https://contest.openai.com/)
+[Environment Overview](https://s3-us-west-2.amazonaws.com/openai-assets/research-covers/retro-contest/gotta_learn_fast_report.pdf)
+
+### Rainbow DQN
 - [Rainbow DQN arvix paper](https://arxiv.org/abs/1710.02298)
+- [ALE Deep Learning Paper](https://arxiv.org/pdf/1312.5602.pdf)
+- [Double DQN Paper](https://arxiv.org/abs/1509.06461.pdf)
+- [Dueling DQN Paper](https://arxiv.org/abs/1511.06581.pdf) 
+- [Prioritized Experience Replay Paper](https://arxiv.org/abs/1511.05952.pdf)
+- [NoisyNet Paper](https://arxiv.org/abs/1706.10295.pdf)
+- [N-step DQN Paper](https://arxiv.org/pdf/1801.01968.pdf)
+- [Distributional DQN Paper](https://arxiv.org/pdf/1707.06887.pdf)
